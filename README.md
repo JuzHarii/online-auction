@@ -48,7 +48,7 @@ The project structure is based on a **Full-Stack Separated Architecture**, promo
 ### 1. Clone or Open Local Repository
 ```bash
 # If not cloned yet
-git clone <repository-url> && cd ThinkLabWeb
+git clone <repository-url> && cd online-auction 
 
 # If already in workspace, ensure you're on the correct branch
 git checkout main   # or your desired branch
