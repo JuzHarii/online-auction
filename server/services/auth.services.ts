@@ -19,7 +19,7 @@ export const create = async (data: UserRegister) => {
 
   const user = await db.prisma.user.create({ data });
   
-  return { success: true, user };
+  return { success: true, user, message: "Register successfully" };
 };
 
 type UserLogin = {
@@ -42,5 +42,5 @@ export const authenticateUser = async (data: UserLogin) => {
     return { success: false, message: "Password incorrect" };
   }
 
-  return { success: true, user };
+  return { success: true, user, message: "SignIn successful" };
 };
