@@ -3,12 +3,7 @@
 ## Project Structure
 The project structure is based on a **Full-Stack Separated Architecture**, promoting a clear separation of concerns between the **React Frontend** and the **Node.js/Express Backend**.
 ```markdown
-# ThinkLabWeb Project
-
-## Project Structure
-The project structure is based on a **Full-Stack Separated Architecture**, promoting a clear separation of concerns between the **React Frontend** and the **Node.js/Express Backend**.
-
-```
+```bash
 ├── client/
 │   ├── dist/                  # Production build files
 │   ├── index.html             # Entry HTML file
@@ -46,7 +41,6 @@ The project structure is based on a **Full-Stack Separated Architecture**, promo
 ├── tsconfig.json              # Global TypeScript settings
 └── vite.config.ts             # Vite bundler configuration
 ```
-
 ---
 
 ## Quickstart (Local Development)
