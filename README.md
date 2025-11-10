@@ -59,16 +59,7 @@ git checkout main   # or your desired branch
 npm i
 ```
 
-### 3. Database Setup
-```bash
-npm run db:setup
-```
-
-> This command typically runs `prisma generate`, `prisma migrate dev`, and optionally `prisma db seed`.
-
----
-
-### 4. Copy Environment Template and Configure
+### 3. Copy Environment Template and Configure
 ```bash
 cp .env.example .env
 ```
@@ -96,6 +87,16 @@ DB_PASSWORD=your_db_password
 > **Security Tip**: Never commit `.env` to version control.
 
 ---
+
+### 4. Database Setup
+```bash
+npm run db:setup
+```
+
+> This command typically runs `prisma generate`, `prisma migrate dev`, and optionally `prisma db seed`.
+
+---
+
 
 ### 5. Run Development Server
 ```bash
