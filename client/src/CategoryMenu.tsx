@@ -16,7 +16,7 @@ export default function CategoryMenu(): JSX.Element {
         return ( 
           <li key={key} className="relative group"> 
             <button 
-              className="cursor-pointer focus:outline-none my-4 
+              className="cursor-pointer focus:outline-2 focus:outline-[#8D0000] my-4 
                         hover:text-[#8D0000] hover:underline
                         group-hover:text-[#8D0000] group-hover:underline
                         focus:text-[#8D0000] focus:underline"

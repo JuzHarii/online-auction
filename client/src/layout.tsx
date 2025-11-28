@@ -40,7 +40,7 @@ function Layout() {
                     <Link to="/signin">Sign in</Link>
                   </li>
                   <li className="bg-black text-white px-3 py-1 rounded cursor-pointer">
-                    <Link to="/signup">Sign up</Link>
+                    <Link to="/register">Sign up</Link>
                   </li>
                 </>
               ) : (

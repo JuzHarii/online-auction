@@ -1,6 +1,7 @@
 import express from "express";
 import * as authController from "../controllers/auth.controllers.ts";
 import { celebrate, Joi, Segments } from "celebrate";
+import * as emailController from "../controllers/email.controller.ts";
 import path from "path";
 
 const router = express.Router();
@@ -24,5 +25,12 @@ router.get("/home/products", authController.getProducts)
 const publicDirectoryPath = path.join('./server',  'assets', 'products');
 
 router.use('/assets', express.static(publicDirectoryPath));
+
+router.use('/sendmail', emailController.sendMail)
+
+router.use('/verify', emailController.verifyCode)
+
+
+router.use('/changepassword', authController.changePassword)
 
 export default router;

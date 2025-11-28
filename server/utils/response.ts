@@ -7,4 +7,4 @@ export const createResponse = (isSuccess: boolean, data: any = null, message: st
 
 export const successResponse = (data: any, message: string) => createResponse(true, data, message);
 
-export const errorResponse = (message: string) => createResponse(false, null, message);
+export const errorResponse = (message: any) => createResponse(false, null, message);

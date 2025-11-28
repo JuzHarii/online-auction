@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import * as authService from "../services/auth.services.ts";
 import { errorResponse, successResponse } from "../utils/response.ts";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import db from "../services/database.ts"
 
 export const register = async (req: Request, res: Response) => {
@@ -18,7 +17,7 @@ export const register = async (req: Request, res: Response) => {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET is not set");
     const token = jwt.sign(
-      { id: user.user_id, name: user.full_name, email: user.email },
+      { id: user.user_id, name: user.name, email: user.email },
       secret,
       { expiresIn: "1h" }
     );
@@ -30,7 +29,7 @@ export const register = async (req: Request, res: Response) => {
     });
 
     return res.status(201).json(successResponse(
-      { name: user.full_name, email: user.email },
+      { name: user.name, email: user.email },
       result.message
     ));
 
@@ -51,17 +50,13 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const user = data.user;
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-      return res.status(400).json(errorResponse(data.message));
-    }
 
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error("JWT_SECRET is not set");
 
 
     const token = jwt.sign(
-      { id: user.user_id, name: user.full_name, email: user.email },
+      { id: user.user_id, name: user.name, email: user.email },
       secret,
       { expiresIn: "1h" }
     );
@@ -74,7 +69,7 @@ export const login = async (req: Request, res: Response) => {
     });
 
     return res.status(200).json(successResponse(
-      { name: user.full_name, email: user.email },
+      { name: user.name, email: user.email },
       data.message
     ));
 
@@ -109,7 +104,7 @@ export const getProducts = async (req: Request, res: Response) => {
         buy_now_price: product.buy_now_price,
         end_time: product.end_time,
         created_at: product.created_at,
-        highest_bidder_name: product.current_highest_bidder?.full_name || null,
+        highest_bidder_name: product.current_highest_bidder?.name || null,
         image_url: product.images[0]?.image_url || null,
       };
     });
@@ -120,3 +115,23 @@ export const getProducts = async (req: Request, res: Response) => {
     return res.status(500).json(errorResponse(String(e)));
   }
 };
+
+
+
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    if (!req.cookies.reset_token) {
+      return res.status(401).json({ message: "Token missing" });
+    }
+
+    const result = await authService.changePassword(req.body)
+
+    if (!result.success) {
+      return res.status(500).json(errorResponse(result.message))
+    }
+
+    return res.status(200).json(successResponse(result.updateUser, result.message))
+  } catch (e) {
+    return res.status(500).json(errorResponse(e))
+  }
+}

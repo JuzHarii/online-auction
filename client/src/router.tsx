@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage';
 import Layout from './layout';
 import Register from './pages/Register.tsx';
 import LogIn from './pages/LogIn.tsx';
+import ForgotPassword from './pages/ForgotPassword.tsx';
 
 function Router() {
   return (
@@ -11,8 +12,9 @@ function Router() {
         <Route path="/" element={<HomePage />}></Route>
       </Route>
 
-      <Route path="/signup" element={<Register />}></Route>
+      <Route path="/register" element={<Register />}></Route>
       <Route path="/signin" element={<LogIn />}></Route>
+      <Route path="/forgotpassword" element={<ForgotPassword />}></Route>
     </Routes>
   );
 }

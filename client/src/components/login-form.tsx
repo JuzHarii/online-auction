@@ -1,192 +1,127 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useUser } from '../UserContext.tsx';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useForm, SubmitHandler } from "react-hook-form";
+import { z } from 'zod'
+import { ClipLoader } from "react-spinners"
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../UserContext';
 
-const ACCENT_COLOR = '#8D0000';
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export default function LogIn() {
 
-const validate = (values: { email: string; password: string }) => {
-  const errors: { email?: string; password?: string } = {};
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
 
-  if (!values.email) {
-    errors.email = 'Email is required';
-  } else if (!emailRegex.test(values.email)) {
-    errors.email = 'Invalid email format';
+  const schema = z.object({
+    email: z.string().email({message: "Invalid email format"}),
+    password: z.string().regex(strongPasswordRegex, {message: "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)"}),
+  })
+
+
+  const [loading, setLoading] = useState(false)
+
+  type Inputs = {
+    email: string
+    password: string
   }
 
-  if (!values.password) {
-    errors.password = 'Password is required';
-  }
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: {errors},
+    setError
+  
+  } = useForm<Inputs>({
+    resolver: zodResolver(schema)
+  })
 
-  return errors;
-};
+  const navigate = useNavigate()
 
-export default function SignInForm() {
   const { setUser } = useUser();
-  const navigate = useNavigate();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const [values, setValues] = useState({
-    email: '',
-    password: '',
-  });
-
-  const [touched, setTouched] = useState({
-    email: false,
-    password: false,
-  });
-
-  const errors = validate(values);
-  const isValid = Object.keys(errors).length === 0;
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValues({
-      ...values,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    setTouched({
-      ...touched,
-      [e.target.name]: true,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setTouched({ email: true, password: true });
-
-    if (!isValid) {
-      setError('Please fill in all required fields and check email format.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setSuccess(false);
-
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true)
     try {
-      const response = await fetch('http://localhost:8000/api/auth/signin', {
+      const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password
+        }),
       });
 
-      const data = await response.json();
+      const result = await res.json();
 
-      if (!response.ok) {
-        const serverMessage = data.message || 'Sign in failed. Please check your credentials.';
-        throw new Error(serverMessage);
+      if (!res.ok) {
+        if (!result.success) {
+          if (result.message.email) {
+            setError('email', {
+              message: result.message.email,
+            })
+          }
+          
+          if (result.message.password) {
+            setError('password', {
+              message: result.message.password,
+            })
+          }
+        }
       }
 
-      setSuccess(true);
       setUser({
-        name: data.data.name || data.data.email,
-        email: data.data.email,
-      });
-
-      console.log('[v0] Sign in successful:', data);
+        name: result.data.name,
+        email: result.data.email,
+       });
       navigate('/');
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'An unexpected error occurred during sign in.';
-      setError(errorMessage);
-      console.error('[v0] Sign in error:', err);
+      console.error('[v0] Registration error:', err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white w-full max-w-md mx-auto">
-      {error && (
-        <div
-          className={`mb-4 p-3 bg-red-100 border border-[${ACCENT_COLOR}] text-[${ACCENT_COLOR}] rounded-md text-sm`}
-        >
-          {error}
-        </div>
-      )}
+    <div className='p-8 border border-gray-200 shadow-lg rounded-lg bg-white'>
+      <form action="" onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4'>  
 
-      {success && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-md text-sm">
-          Sign in successful! Redirecting...
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2.5">
-          <label htmlFor="email" className="text-sm font-semibold text-gray-900">
-            Email Address
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            value={values.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              touched.email && errors.email
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {touched.email && errors.email && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>{errors.email}</p>
-          )}
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="email" className="font-semibold text-gray-900">Email</label>
+          <input type="text" id="email" placeholder='your@example.com' {...register("email", {required: true})} className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'/>
+          {errors.email && <span className='text-[#8D0000]'>{errors.email.message}</span>}
         </div>
 
-        <div className="space-y-2.5">
-          <label htmlFor="password" className="text-sm font-semibold text-gray-900">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={values.password}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              touched.password && errors.password
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {touched.password && errors.password && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>{errors.password}</p>
-          )}
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="password" className="font-semibold text-gray-900">Password</label>
+          <input type="password" id="password" placeholder='********' {...register("password", {required: true})}  className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'/>
+          {errors.password && <span className='text-[#8D0000]'>{errors.password.message}</span>}
         </div>
 
-        <button
-          type="submit"
-          className={`w-full bg-[#8D0000] hover:bg-[#A80000] font-bold text-white py-2.5 mt-8 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-          disabled={isLoading || !isValid}
-        >
-          {isLoading ? 'Signing In...' : 'Sign In'}
+        <div className='mb-0 flex flex-row justify-end'>
+          <Link
+             to="/forgotpassword"
+            className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
+       
+        <button type="submit" className={`w-full bg-[#8D0000] font-bold text-white py-2.5 rounded-md transition-color hover:cursor-pointer flex flex-col justify-center items-center`}>
+          {loading ? <ClipLoader loading={loading} size={20} color='white'/> : <p>Sign In</p> }
         </button>
 
-        <p className="text-center text-sm text-gray-600">
+
+        <p className="text-center text-gray-600">
           Don't have an account?{' '}
           <Link
-            to="/signup"
+            to="/register"
             className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
           >
             Register now
           </Link>
         </p>
+
       </form>
     </div>
   );

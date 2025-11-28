@@ -1,220 +1,124 @@
 import { useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { useForm, SubmitHandler } from "react-hook-form";
+import { z } from 'zod'
+import { ClipLoader } from "react-spinners"
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom';
 
-const ACCENT_COLOR = '#8D0000';
+export default function Register() {
 
-const strongPasswordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
+  
+  const schema = z.object({
+    name: z.string().min(3, {message: "Name must be 3–8 characters."}).max(8, {message: "Name must be 3–8 characters."}),
+    email: z.string().email({message: "Invalid email format"}),
+    password: z.string().regex(strongPasswordRegex, {message: "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)"}),
+    confirmpassword: z.string(),
+  }).refine((data) => data.password === data.confirmpassword, {
+    message: "Confirmation password does not match",
+    path: ["confirmpassword"]
+  })
 
-const validationSchema = Yup.object().shape({
-  name: Yup.string()
-    .required('Name is required')
-    .min(3, 'Name must be at least 3 characters')
-    .max(8, 'Name must not exceed 8 characters'),
-  email: Yup.string().email('Please enter a valid email').required('Email is required'),
-  password: Yup.string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .max(30, 'Password must not exceed 30 characters')
-    .matches(
-      strongPasswordRegex,
-      'Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)'
-    ),
-  confirmPassword: Yup.string()
-    .required('Confirming password is required')
-    .oneOf([Yup.ref('password')], 'Confirmation password does not match'), // Must match the password field
-});
 
-export default function RegisterForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false)
 
-  const navigate = useNavigate();
+  type Inputs = {
+    name: string
+    email: string
+    password: string
+    confirmpassword: string
+  }
 
-  const formik = useFormik({
-    initialValues: {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    },
-    validationSchema,
-    onSubmit: async (values) => {
-      setIsLoading(true);
-      setError(null);
-      setSuccess(false);
-      const { confirmPassword, ...submitValues } = values;
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: {errors},
+    setError
+  
+  } = useForm<Inputs>({
+    resolver: zodResolver(schema)
+  })
 
-      try {
-        const response = await fetch('http://localhost:8000/api/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(submitValues),
-        });
+  const navigate = useNavigate()
 
-        const data = await response.json();
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password
+        }),
+      });
 
-        if (!response.ok) {
-          const serverMessage =
-            data.message || (data.errors && data.errors[0].msg) || 'Registration failed';
-          throw new Error(serverMessage);
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (!result.success) {
+          if (result.message.email) {
+            setError('email', {
+              message: result.message.email,
+            })
+          }
+          
+          if (result.message.password) {
+            setError('password', {
+              message: result.password.email,
+            })
+          }
         }
-
-        setSuccess(true);
-       
-        console.log('[v0] Registration successful:', data);
-        formik.resetForm();
-        navigate('/signin');
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-        setError(errorMessage);
-        console.error('[v0] Registration error:', err);
-      } finally {
-        setIsLoading(false);
       }
-    },
-  });
+
+      navigate('/signin');
+    } catch (err) {
+      console.error('[v0] Registration error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white">
-      {/* Error Message */}
-      {error && (
-        <div
-          className={`mb-4 p-3 bg-red-100 border border-[${ACCENT_COLOR}] text-[${ACCENT_COLOR}] rounded-md text-sm`}
-        >
-          {error}
-        </div>
-      )}
-
-      {/* Success Message */}
-      {success && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-md text-sm">
-          Registration successful! Redirecting...
-        </div>
-      )}
-
-      <form onSubmit={formik.handleSubmit} className="space-y-6">
-        {/* Full Name */}
-        <div className="space-y-2.5">
-          <label htmlFor="name" className="text-sm font-semibold text-gray-900">
-            Full Name
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="John Doe"
-            value={formik.values.name}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              formik.touched.name && formik.errors.name
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {formik.touched.name && formik.errors.name && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>{formik.errors.name}</p>
-          )}
+    <div className='p-8 border border-gray-200 shadow-lg rounded-lg bg-white'>
+      <form action="" onSubmit={handleSubmit(onSubmit)} className='flex flex-col gap-4'>  
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="name" className="font-semibold text-gray-900">Full Name</label>
+          <input type="text" id="name" placeholder='John Doe' {...register("name", {required: true})} className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'/>
+          {errors.name && <span className='text-[#8D0000]'>{errors.name.message}</span>}
         </div>
 
-        {/* Email Field */}
-        <div className="space-y-2.5">
-          <label htmlFor="email" className="text-sm font-semibold text-gray-900">
-            Email Address
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            value={formik.values.email}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              formik.touched.email && formik.errors.email
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {formik.touched.email && formik.errors.email && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>{formik.errors.email}</p>
-          )}
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="email" className="font-semibold text-gray-900">Email</label>
+          <input type="text" id="email" placeholder='your@example.com' {...register("email", {required: true})} className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'/>
+          {errors.email && <span className='text-[#8D0000]'>{errors.email.message}</span>}
         </div>
 
-        {/* Password Field */}
-        <div className="space-y-2.5">
-          <label htmlFor="password" className="text-sm font-semibold text-gray-900">
-            Password
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            value={formik.values.password}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              formik.touched.password && formik.errors.password
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {formik.touched.password && formik.errors.password && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>{formik.errors.password}</p>
-          )}
-          <p className="text-xs text-gray-500">
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="password" className="font-semibold text-gray-900">Password</label>
+          <input type="password" id="password" placeholder='********' {...register("password", {required: true})}  className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'/>
+          {!errors.password && <p className="text-xs text-gray-500">
             At least 8 characters with uppercase, lowercase, number, and special character
-          </p>
+          </p>}
+          {errors.password && <span className='text-[#8D0000]'>{errors.password.message}</span>}
         </div>
 
-        {/* Confirm Password Field */}
-        <div className="space-y-2.5">
-          <label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-900">
-            Confirm Password
-          </label>
-          <input
-            id="confirmPassword"
-            name="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            value={formik.values.confirmPassword}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${ACCENT_COLOR}] transition-colors ${
-              formik.touched.confirmPassword && formik.errors.confirmPassword
-                ? `border-[${ACCENT_COLOR}] focus:ring-[${ACCENT_COLOR}]`
-                : 'border-gray-300'
-            }`}
-            disabled={isLoading}
-          />
-          {formik.touched.confirmPassword && formik.errors.confirmPassword && (
-            <p className={`text-xs font-medium text-[${ACCENT_COLOR}]`}>
-              {formik.errors.confirmPassword}
-            </p>
-          )}
+        <div className='flex flex-col gap-2'>
+          <label htmlFor="confirmpassword" className="font-semibold text-gray-900">Confirm Password</label>
+          <input type="password" id="`confirmpassword" placeholder='********' {...register("confirmpassword", {required: true})}  className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]' />
+          {errors.confirmpassword && <span className='text-[#8D0000]'>{errors.confirmpassword.message}</span>}
         </div>
+      
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className={`w-full bg-[#8D0000] hover:bg-[#A80000] font-bold text-white py-2.5 mt-8 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-          disabled={isLoading || !formik.isValid}
-        >
-          {isLoading ? 'Creating Account...' : 'Create Account'}
+        <button type="submit" className={`w-full bg-[#8D0000] font-bold text-white py-2.5 rounded-md transition-color hover:cursor-pointer flex flex-col justify-center items-center`}>
+          {loading ? <ClipLoader loading={loading} size={20} color='white'/> : <p>Create Account</p> }
         </button>
 
-        {/* Sign In Link */}
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-gray-600">
           Already have an account?{' '}
           <Link
             to="/signin"
@@ -223,6 +127,7 @@ export default function RegisterForm() {
             Sign in
           </Link>
         </p>
+
       </form>
     </div>
   );

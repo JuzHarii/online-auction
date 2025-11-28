@@ -40,8 +40,8 @@ async function main() {
     update: {},
     create: {
       email: 'seller1@example.com',
-      full_name: 'John Doe',
-      password_hash: hashedPassword,
+      name: 'John Doe',
+      password: hashedPassword,
       role: 'seller', // Đặt làm seller luôn
       is_email_verified: true,
     },
@@ -52,8 +52,8 @@ async function main() {
     update: {},
     create: {
       email: 'seller2@example.com',
-      full_name: 'Jane Smith',
-      password_hash: hashedPassword,
+      name: 'Jane Smith',
+      password: hashedPassword,
       role: 'seller',
       is_email_verified: true,
     },

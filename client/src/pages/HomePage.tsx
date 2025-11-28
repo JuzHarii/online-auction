@@ -3,7 +3,6 @@ import MatrixRain from './MatrixRain';
 
 function HomePage() {
   const handleScroll = () => {
-    console.log("click button")
     window.scrollTo({
       top: window.innerHeight,
       behavior: "smooth"
