@@ -211,14 +211,14 @@ export default function ProductUploadForm() {
                   {...register('productName')}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                     errors.productName
-                      ? 'border-red-500 focus:ring-red-500'
+                      ? 'border-[#8D0000] focus:ring-[#8D0000]'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                   }`}
                   aria-invalid={errors.productName ? 'true' : 'false'}
                 />
                 {/* Error message display */}
                 {errors.productName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.productName.message}</p>
+                  <p className="mt-1 text-sm text-[#8D0000]">{errors.productName.message}</p>
                 )}
               </div>
 
@@ -240,7 +240,7 @@ export default function ProductUploadForm() {
                       {...register('startingPrice')}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                         errors.startingPrice
-                          ? 'border-red-500 focus:ring-red-500'
+                          ? 'border-[#8D0000] focus:ring-[#8D0000]'
                           : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                       }`}
                       aria-invalid={errors.startingPrice ? 'true' : 'false'}
@@ -251,7 +251,7 @@ export default function ProductUploadForm() {
                     </span>
                   </div>
                   {errors.startingPrice && (
-                    <p className="mt-1 text-sm text-red-600">{errors.startingPrice.message}</p>
+                    <p className="mt-1 text-sm text-[#8D0000]">{errors.startingPrice.message}</p>
                   )}
                 </div>
 
@@ -271,7 +271,7 @@ export default function ProductUploadForm() {
                       {...register('stepPrice')}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                         errors.startingPrice
-                          ? 'border-red-500 focus:ring-red-500'
+                          ? 'border-[#8D0000] focus:ring-[#8D0000]'
                           : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                       }`}
                       aria-invalid={errors.startingPrice ? 'true' : 'false'}
@@ -282,7 +282,7 @@ export default function ProductUploadForm() {
                     </span>
                   </div>
                   {errors.stepPrice && (
-                    <p className="mt-1 text-sm text-red-600">{errors.stepPrice.message}</p>
+                    <p className="mt-1 text-sm text-[#8D0000]">{errors.stepPrice.message}</p>
                   )}
                 </div>
 
@@ -302,7 +302,7 @@ export default function ProductUploadForm() {
                       {...register('buyNowPrice')}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                         errors.startingPrice
-                          ? 'border-red-500 focus:ring-red-500'
+                          ? 'border-[#8D0000] focus:ring-[#8D0000]'
                           : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                       }`}
                       aria-invalid={errors.startingPrice ? 'true' : 'false'}
@@ -313,7 +313,7 @@ export default function ProductUploadForm() {
                     </span>
                   </div>
                   {errors.buyNowPrice && (
-                    <p className="mt-1 text-sm text-red-600">{errors.buyNowPrice.message}</p>
+                    <p className="mt-1 text-sm text-[#8D0000]">{errors.buyNowPrice.message}</p>
                   )}
                 </div>
               </div>
@@ -332,14 +332,14 @@ export default function ProductUploadForm() {
                   {...register('auctionEndTime')}
                   className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 transition ${
                     errors.auctionEndTime
-                      ? 'border-red-500 focus:ring-red-500'
+                      ? 'border-[#8D0000] focus:ring-[#8D0000]'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                   }`}
                   aria-invalid={errors.auctionEndTime ? 'true' : 'false'}
                 />
                 {/* Error message display */}
                 {errors.auctionEndTime && (
-                  <p className="mt-1 text-sm text-red-600">{errors.auctionEndTime.message}</p>
+                  <p className="mt-1 text-sm text-[#8D0000]">{errors.auctionEndTime.message}</p>
                 )}
               </div>
 
@@ -358,13 +358,13 @@ export default function ProductUploadForm() {
                   {...register('description')}
                   className={`w-full flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition resize-none ${
                     errors.description
-                      ? 'border-red-500 focus:ring-red-500'
+                      ? 'border-[#8D0000] focus:ring-[#8D0000]'
                       : 'border-gray-300 focus:ring-blue-500 focus:border-transparent'
                   }`}
                   aria-invalid={errors.description ? 'true' : 'false'}
                 />
                 {errors.description && (
-                  <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                  <p className="mt-1 text-sm text-[#8D0000]">{errors.description.message}</p>
                 )}
               </div>
             </div>
@@ -445,7 +445,7 @@ export default function ProductUploadForm() {
                               <button
                                 type="button"
                                 onClick={() => removeImage(actualIndex)}
-                                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-700 transition text-lg leading-none"
+                                className="absolute top-1 right-1 bg-[#8D0000] text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-[#8D0000] transition text-lg leading-none"
                                 aria-label={`Remove image ${actualIndex + 1}`}
                               >
                                 ×
@@ -549,7 +549,7 @@ export default function ProductUploadForm() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 disabled:bg-red-400 transition cursor-pointer"
+                  className="px-6 py-2 bg-[#8D0000] text-white font-medium rounded-lg hover:bg-[#8D0000] disabled:bg-[#8D0000] transition cursor-pointer"
                 >
                   {isSubmitting ? 'Uploading...' : 'Submit'}
                 </button>
