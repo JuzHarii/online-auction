@@ -5,6 +5,7 @@ import Register from './pages/Register.tsx';
 import LogIn from './pages/LogIn.tsx';
 import ForgotPassword from './pages/ForgotPassword.tsx';
 import UploadPage from './pages/UploadPage.tsx';
+import ProductDetail from './pages/ProductPage.tsx';
 
 function Router() {
   return (
@@ -12,6 +13,7 @@ function Router() {
       <Route path="/" element={<Layout />}>
         <Route path="/" element={<HomePage />}></Route>
         <Route path="/upload" element={<UploadPage />}></Route>
+        <Route path="/product" element={<ProductDetail />}></Route>
       </Route>
 
       <Route path="/register" element={<Register />}></Route>
