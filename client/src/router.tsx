@@ -6,8 +6,8 @@ import LogIn from './pages/LogIn.tsx';
 import ForgotPassword from './pages/ForgotPassword.tsx';
 import UploadPage from './pages/UploadPage.tsx';
 import ProductDetail from './pages/ProductPage.tsx';
-import BidderProfile from './pages/BidderProfile.tsx';
-
+import UserProfile
+ from './pages/UserProfile.tsx';
 function Router() {
   return (
     <Routes>
@@ -15,7 +15,7 @@ function Router() {
         <Route path="/" element={<HomePage />}></Route>
         <Route path="/upload" element={<UploadPage />}></Route>
         <Route path="/product" element={<ProductDetail />}></Route>
-        <Route path="/bidder/:id" element={<BidderProfile/>}></Route>
+        <Route path="/profile/me" element={<UserProfile/>}></Route>
       </Route>
 
       <Route path="/register" element={<Register />}></Route>
