@@ -2,20 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import userIcon from '../assets/user.png'
 import { useUser } from '../UserContext'
-
-interface ProfileData {
-  name: string;
-  email: string;
-  role: string;
-  created_at: string;
-  total_bids: number;
-  bids_this_week: number;
-  total_wins: number;
-  win_rate: number;
-  watchlist_count: number;
-  rating: number;
-  rating_label: string;
-}
+import { ProfileData } from "../components/user-profile/types"
+import UserTab from "../components/user-profile/user-profile-tabs"
 
 export default function UserProfile() {
   const user = useUser();
@@ -88,7 +76,7 @@ export default function UserProfile() {
         </div>
       </div>
 
-      <div className="my-10 flex flex-col sm:flex-row gap-5">
+      <div className="my-10 flex flex-col md:flex-row gap-5">
         <div className="max-w-2xl flex-1 min-w-0 px-5 pt-10 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
           <div className="flex flex-row gap-5 mb-5">
             <img src={userIcon} alt="User icon" className="w-auto h-12"/>
@@ -129,44 +117,72 @@ export default function UserProfile() {
             </button>
             
             <button className="
-              cursor-pointer bg-white text-[#8D0000]
-              hover:bg-[#F0EEEE] hover:scale-101
+              cursor-pointer bg-yellow-300 text-black-800
+              hover:bg-yellow-400 hover:scale-101
               active:scale-95 
               transition-all duration-200 shadow-md hover:shadow-md 
-               rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
+              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
             ">
+              Let me sell
+            </button>
+
+            <button 
+              className="
+                cursor-pointer bg-white text-[#8D0000]
+                hover:bg-[#F0EEEE] hover:scale-101
+                active:scale-95 
+                transition-all duration-200 shadow-md hover:shadow-md 
+                rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
+              "
+              onClick={() => {
+                user.setUser(null);
+                navigate("/");
+              }}
+            >
               Sign out
             </button>
           </div>
         </div>
 
-        <div className="flex-4 min-w-0">
-          <div className="flex flex-row">
-            {
-              tabs.map((tab) => {
-                const tabID = tab.toLowerCase().replace(" ", "-");
-                const isActive = activeTab === tabID;
+        <div className="flex-3 min-w-0">
+ 
+          {/* <div>
+            <div className="flex flex-row">
+              {
+                tabs.map((tab) => {
+                  const tabID = tab.toLowerCase().replace(" ", "-");
+                  const isActive = activeTab === tabID;
 
-                return(
-                  <h2
-                    key={tab}
-                    onClick={() => setActiveTab(tabID)}
-                    className={`
-                      cursor-pointer text-xl pb-1 px-3 border-b truncate
-                      ${
-                        isActive ?
-                        "border-[#8D0000] text-[#8D0000] font-medium border-b-2" :
-                        "border-gray-300 hover:font-medium hover:border-b-2 hover:border-gray-500"
-                      }
-                    `}
-                  >
-                    {tab}
-                  </h2>
-                )
-              })
-            }
-          </div>
+                  return(
+                    <h2
+                      key={tab}
+                      onClick={() => setActiveTab(tabID)}
+                      className={`
+                        cursor-pointer text-xl pb-1 px-3 border-b truncate
+                        ${
+                          isActive ?
+                          "border-[#8D0000] text-[#8D0000] font-medium border-b-2" :
+                          "border-gray-300 hover:font-medium hover:border-b-2 hover:border-gray-500"
+                        }
+                      `}
+                    >
+                      {tab}
+                    </h2>
+                  )
+                })
+              }
+            </div>
 
+            <div className="mt-5 p-5 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2">
+              <div>TKin cần dataaaa</div>
+            </div>
+          </div> */}
+
+          <UserTab profile={profile} />
+
+          {/* useState đang là xem profile */}
+          <div></div>
+          {/* useState đang là sửa password */}
           <div></div>
         </div>
       </div>
