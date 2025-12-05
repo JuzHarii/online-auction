@@ -302,22 +302,22 @@ export const getUserProfile = async (req: Request, res: Response) => {
 // API: PATCH /api/users/profile
 export const editUserProfile = async (req: Request, res: Response) => {
   try {
-    // 1. Lấy userId từ authMiddleware (bắt buộc đã login)
     const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized – Không tìm thấy thông tin người dùng" });
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
     }
 
     // 2. Lấy dữ liệu từ body
-    const { name, address, birthdate } = req.body as {
+    const { name, email, birthdate, address } = req.body as {
       name?: string;
+      email?: string;
+      birthdate?: Date; // format: "1999-12-31"
       address?: string;
-      birthdate?: string; // format: "1999-12-31"
     };
 
     // 3. Validate cơ bản
-    if (!name && !address && !birthdate) {
-      return res.status(400).json({ message: "Vui lòng cung cấp ít nhất một trường để cập nhật" });
+    if (!name && !email && !address && !birthdate) {
+      return res.status(400).json({ message: "No personal data to change" });
     }
 
     if (name && (name.trim().length < 2 || name.trim().length > 50)) {

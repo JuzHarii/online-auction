@@ -26,9 +26,13 @@ router.post('/auth/signin', authController.login);
 
 router.get('/home/products', getProducts);
 
+// ===== PROFILE PAGE'S API =====
+
 router.get('/bidder/:id', getUserProfile);
 
 router.get('/profile/me', authMiddleware, getMyProfile);
+
+// ===============================
 
 router.post('/upload', authController.getAuthentication, uploadProducts);
 

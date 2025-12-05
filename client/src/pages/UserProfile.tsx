@@ -102,7 +102,7 @@ export default function UserProfile() {
                 cursor-pointer bg-[#8D0000] 
                 hover:bg-[#760000] hover:scale-101
                 active:scale-95 
-                transition-all duration-200 shadow-md hover:shadow-md
+                transition-all duration-200 hover:shadow-md
                 text-white rounded-sm shadow-sm shadow-stone-300 font-medium p-2
               "
             >
@@ -113,7 +113,7 @@ export default function UserProfile() {
               cursor-pointer bg-black text-white
               hover:bg-[#5C5C5C] hover:scale-101
               active:scale-95 
-              transition-all duration-200 shadow-md hover:shadow-md
+              transition-all duration-200 hover:shadow-md
               rounded-sm shadow-sm shadow-stone-300 font-medium p-2
             ">
               Change password
@@ -123,7 +123,7 @@ export default function UserProfile() {
               cursor-pointer bg-yellow-300 text-black-800
               hover:bg-yellow-400 hover:scale-101
               active:scale-95 
-              transition-all duration-200 shadow-md hover:shadow-md 
+              transition-all duration-200 hover:shadow-md 
               rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
             ">
               Let me sell
@@ -134,7 +134,7 @@ export default function UserProfile() {
                 cursor-pointer bg-white text-[#8D0000]
                 hover:bg-[#F0EEEE] hover:scale-101
                 active:scale-95 
-                transition-all duration-200 shadow-md hover:shadow-md 
+                transition-all duration-200 hover:shadow-md 
                 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
               "
               onClick={() => {
