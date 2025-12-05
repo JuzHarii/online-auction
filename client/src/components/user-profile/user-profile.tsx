@@ -5,6 +5,10 @@ import { SetAction } from "./types";
 import { useForm, SubmitHandler } from "react-hook-form";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Navigate, useNavigate } from "react-router-dom";
+import { METHODS } from "http";
+import { ClipLoader } from "react-spinners";
+
 
 const UserEditData = z.object({
   name: z.string(),
@@ -139,7 +143,216 @@ function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: S
 }
 
 function ChangePassword( {profile, setAction} : {profile: ProfileData, setAction: SetAction} ) {
-  return(<></>)
+  const [loading, setLoading] = useState(false)
+  const [oldPassword, setOldPassword] = useState('')
+  const [error, setError] = useState<string | null> (null)
+  
+  const [step, setStep] = useState("verify")
+  
+  const navigate = useNavigate()
+  const email = profile.email
+
+  const onSubmitVerify = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+
+      const res = await fetch('/api/profile/verifyuser', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: email,
+          password: oldPassword
+        })
+      });
+
+      const result = await res.json();
+      setLoading(false);
+
+      if (!res.ok) {
+        let errorMsg = "Errors occure";
+         
+         if (typeof result.message === 'string') {
+             errorMsg = result.message;
+         } else if (result.message && typeof result.message === 'object') {
+             errorMsg = Object.values(result.message)[0] as string;
+         }
+         
+         setError(errorMsg);
+      } else {
+        setError(null)
+        setStep("new-password")
+      }
+    } catch(e) {
+      setLoading(false);
+      console.log(e)
+    }
+  }
+
+   const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
+    
+   const schema = z.object({
+      password: z.string().regex(strongPasswordRegex, {message: "Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)"}),
+      confirmpassword: z.string(),
+   }).refine((data) => data.password === data.confirmpassword, {
+      message: "Confirmation password does not match",
+      path: ["confirmpassword"]
+   })
+
+  type Inputs = {
+    password: string
+    confirmpassword: string
+  }
+
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: {errors},
+  } = useForm<Inputs>({
+    resolver: zodResolver(schema)
+  })
+
+
+   
+  const onSubmitNewPassword = async (data: Inputs) => {
+    try { 
+        setLoading(true);
+        const res = await fetch('/api/changepassword', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              email: email,
+              password: data.password
+          }),
+        });
+
+        setLoading(false)
+        const result = await res.json();
+
+        if (!result.isSuccess) {
+          console.log("Fail full!!!")
+          setError(result.message)
+        } else {
+          console.log("Success full!!!")
+          setError(null);
+          setAction("view-tabs")
+        }
+
+    } catch(e) {
+        console.error(e)
+    }
+  }
+
+  const renderStep = () => {
+    switch(step) {
+      case "verify":
+        return(
+          <div className="flex flex-col gap-4">
+            <div className="text-lg font-semibold text-gray-700">
+              Verify your self!
+            </div>
+
+            {error && <div className="text-red-600 bg-red-50 p-2 rounded">{error}</div>}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                onSubmitVerify()
+              }}
+              className="flex flex-col gap-6"
+            >
+              <label 
+                htmlFor="password"
+                className=""
+              >
+                Old password
+              </label>
+
+              <input 
+                id="password" type="password"
+                onChange={(e) => setOldPassword(e.target.value)}
+                placeholder="********"
+                className=""
+              />
+
+              <div className="mt-10 flex flex-col md:flex-row md:mx-auto gap-5">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="
+                    md:order-2
+                    rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
+                    cursor-pointer bg-[#8D0000] text-white
+                    hover:scale-101 hover:bg-[#760000] hover:shadow-md
+                    transition-all duration-200 active:scale-95
+                  "
+                >
+                  {loading ? "Đang kiểm tra..." : "Continue"}
+                </button>
+
+                <button 
+                  onClick={() => setAction("view-tabs")}
+                  className="
+                    md:order-1
+                    rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
+                    cursor-pointer bg-white
+                    hover:scale-101 hover:bg-gray-100 hover:shadow-md
+                    transition-all duration-200 active:scale-95
+                  "
+                >
+                  Back
+                </button>
+              </div>
+            </form>
+
+
+  
+          </div>
+        )
+      
+      case "new-password":
+        return(
+          <div className='p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4'>
+            <h1 className="text-3xl font-bold text-foreground">
+                Create a new password
+            </h1>
+            <hr/>
+            <form className="flex flex-col gap-2" onSubmit={handleSubmit(onSubmitNewPassword)}>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="password" className="font-semibold text-gray-900" >New password </label>
+                  <input type="password" id="password" placeholder="********" className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]' {...register("password")}/>
+                  <p className="text-xs text-gray-500">
+                      At least 8 characters with uppercase, lowercase, number, and special character
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="confirmpassword" className="font-semibold text-gray-900">Retype new password</label>
+                  <input type="password" id="confirmpassword" placeholder="********" className='w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]'  {...register("confirmpassword")}/>
+                </div>
+
+                <div className="flex flex-row gap-4 w-full justify-end mt-4">
+                  <div onClick={() => setAction("view-tabs")} className={`w-fit bg-black font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}>
+                      Cancel
+                  </div>
+                  <button type="submit" className={`w-fit bg-[#8D0000] font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}>
+                      {loading ? <ClipLoader loading={loading} size={20} color='white'/> : <p>Continue</p> }
+                  </button>
+                </div>
+            </form>
+          </div>
+        )
+    }
+  }
+
+  return(
+    <>
+      {renderStep()}
+    </>
+  )
 }
 
 function ViewTabs( {profile, setAction} : {profile: ProfileData, setAction: SetAction} ) {

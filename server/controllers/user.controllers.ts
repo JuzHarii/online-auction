@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from '@prisma/client';
 import { ProductStatus, OrderStatus } from "@prisma/client";
 import { authMiddleware } from "../middleware/auth";
+import bcrypt from "bcryptjs";
+import { authenticateUser, changePassword } from "../services/auth.services";
+import { errorResponse } from "../utils/response";
 
 const prisma = new PrismaClient();
 
@@ -320,19 +323,19 @@ export const editUserProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "No personal data to change" });
     }
 
-    if (name && (name.trim().length < 2 || name.trim().length > 50)) {
-      return res.status(400).json({ message: "Tên phải từ 2 đến 50 ký tự" });
-    }
+    // if (name && (name.trim().length < 2 || name.trim().length > 50)) {
+    //   return res.status(400).json({ message: "Tên phải từ 2 đến 50 ký tự" });
+    // }
 
     if (birthdate) {
       const date = new Date(birthdate);
       if (isNaN(date.getTime())) {
         return res.status(400).json({ message: "Ngày sinh không hợp lệ" });
       }
-      const age = new Date().getFullYear() - date.getFullYear();
-      if (age < 13 || age > 100) {
-        return res.status(400).json({ message: "Tuổi phải từ 13 đến 100" });
-      }
+      // const age = new Date().getFullYear() - date.getFullYear();
+      // if (age < 13 || age > 100) {
+      //   return res.status(400).json({ message: "Tuổi phải từ 13 đến 100" });
+      // }
     }
 
     // 4. Cập nhật vào DB
@@ -340,6 +343,7 @@ export const editUserProfile = async (req: Request, res: Response) => {
       where: { user_id: userId },
       data: {
         name: name?.trim(),
+        email: email?.trim(),
         address: address?.trim() || null,
         birthdate: birthdate ? new Date(birthdate) : undefined,
       },
@@ -362,12 +366,12 @@ export const editUserProfile = async (req: Request, res: Response) => {
         birthdate: updatedUser.birthdate?.toISOString().split("T")[0] || null,
       },
     });
-  } catch (error: any) {
-    console.error("Edit profile error:", error);
-    // Nếu user không tồn tại
-    if (error.code === "P2025") {
-      return res.status(404).json({ message: "Không tìm thấy người dùng" });
-    }
-    return res.status(500).json({ message: "Lỗi server, vui lòng thử lại sau" });
+  } catch (e) {
+    // console.error("Edit profile error:", error);
+    // // Nếu user không tồn tại
+    // if (error.code === "P2025") {
+    //   return res.status(404).json({ message: "Không tìm thấy người dùng" });
+    // }
+    return res.status(500).json(errorResponse(e));
   }
 };

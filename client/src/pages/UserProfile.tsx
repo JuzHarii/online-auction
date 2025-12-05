@@ -39,6 +39,8 @@ export default function UserProfile() {
     fetchProfile();
   }, [user.user, navigate])
 
+  console.log(user)
+
   const handleSignOut = () => {
     user.setUser(null);
     navigate("/");
@@ -49,10 +51,13 @@ export default function UserProfile() {
 
   return (
     <div className="w-[90%] max-w-8xl justify-between mx-auto">
+
+      {/* TITLE */}
       <h1 className="text-center text-5xl font-bold text-[#8D0000] mt-10">
         Welcome, {profile.name}!
       </h1>
 
+      {/* DASHBOARD */}
       <div className="flex flex-col sm:flex-row gap-6 mx-auto mt-10">
         <div className="flex-1 min-w-0 flex flex-col grow gap-2 px-6 py-3 ring ring-gray-200 rounded-sm shadow-sm shadow-stone-300">
           <h2 className="text-xl font-bold">Total bids</h2>
@@ -76,7 +81,11 @@ export default function UserProfile() {
         </div>
       </div>
 
+      {/* PROFLE INFO */}
+
       <div className="my-10 flex flex-col md:flex-row gap-5">
+
+        {/* PROFILE CARD - LEFT */}
         <div className="max-w-2xl flex-1 min-w-0 px-5 pt-10 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
           <div className="flex flex-row gap-5 mb-5">
             <img src={userIcon} alt="User icon" className="w-auto h-12"/>
@@ -109,7 +118,9 @@ export default function UserProfile() {
               My Profile
             </button>
 
-            <button className="
+            <button
+              onClick={() => setAction("change-password")} 
+              className="
               cursor-pointer bg-black text-white
               hover:bg-[#5C5C5C] hover:scale-101
               active:scale-95 
@@ -147,6 +158,7 @@ export default function UserProfile() {
           </div>
         </div>
 
+        {/* TABS */}
         <UserAction profile={profile} action={action} setAction={setAction}/>
       </div>
     </div>

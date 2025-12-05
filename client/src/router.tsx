@@ -14,7 +14,7 @@ function Router() {
       <Route path="/" element={<Layout />}>
         <Route path="/" element={<HomePage />}></Route>
         <Route path="/upload" element={<UploadPage />}></Route>
-        <Route path="/product" element={<ProductDetail />}></Route>
+        <Route path="/product/:id" element={<ProductDetail />}></Route>
         <Route path="/profile/me" element={<UserProfile/>}></Route>
       </Route>
 
