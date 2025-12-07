@@ -85,7 +85,7 @@ export default function CategoryMenu(): JSX.Element {
   }
   
   return (
-    <ul className="flex flex-row justify-center gap-16 font-semibold mx-4">
+    <ul className="flex flex-row justify-center lg:gap-8 xl:gap-12 font-semibold mx-4 flex-wrap">
       {Object.entries(categoryDetail).map(([key, rawItems]) => {
         const items = rawItems as readonly string[];
         const label = (key[0].toUpperCase() + key.slice(1)) as string; 

@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword.tsx';
 import UploadPage from './pages/UploadPage.tsx';
 import ProductDetail from './pages/ProductPage.tsx';
 import Products from './pages/Products.tsx';
+import AdminPage from './admin/adminpage.tsx';
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/register" element={<Register />}></Route>
       <Route path="/signin" element={<LogIn />}></Route>
       <Route path="/forgotpassword" element={<ForgotPassword />}></Route>
+        <Route path="/admin" element={<AdminPage />}></Route>
     </Routes>
   );
 }

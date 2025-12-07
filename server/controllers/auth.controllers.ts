@@ -6,7 +6,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 export const register = async (req: Request, res: Response) => {
   try {
     const result = await authService.create(req.body);
-
+   
     if (!result.success || !result.user) {
       return res.status(400).json(errorResponse(result.message));
     }

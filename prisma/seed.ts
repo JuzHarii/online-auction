@@ -1,11 +1,11 @@
 import { PrismaClient, UserRole, ProductStatus, OrderStatus } from '@prisma/client'
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient()
 
 // --- HELPER FUNCTIONS ---
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomElement = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
-const randomDecimal = (min: number, max: number) => (Math.random() * (max - min) + min).toFixed(2);
 
 // Rich Sample Data
 const SAMPLE_DESCRIPTIONS = [
@@ -47,11 +47,11 @@ async function main() {
   // -------------------------------------------------------
   // 1. CREATE USERS (20 Users: 1 Admin, 5 Sellers, 15 Bidders)
   // -------------------------------------------------------
-  const password = 'Demo1234!'; 
+  const password = bcrypt.hashSync('Demo1234!', 12); 
   const users = [];
 
   // Admin
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: { email: 'admin@system.com', password, name: 'System Admin', role: UserRole.admin, is_email_verified: true }
   });
 
@@ -152,12 +152,21 @@ async function main() {
     const isSold = i < 10;
     const status = isSold ? ProductStatus.sold : ProductStatus.open;
     
-    // Time
-    const createdTime = new Date();
-    createdTime.setDate(createdTime.getDate() - randomInt(5, 20)); // Created 5-20 days ago
-    
-    const endTime = new Date(createdTime);
-    endTime.setDate(endTime.getDate() + 7); // Auction lasts 7 days
+    // --- TIME LOGIC FIX ---
+    let createdTime = new Date();
+    let endTime = new Date();
+
+    if (isSold) {
+        // PAST: Created 20 days ago, Ended 13 days ago
+        createdTime.setDate(createdTime.getDate() - 20);
+        endTime = new Date(createdTime);
+        endTime.setDate(endTime.getDate() + 7);
+    } else {
+        // FUTURE: Created 1 day ago, Ends in 3 to 10 days from NOW
+        createdTime.setDate(createdTime.getDate() - 1); 
+        endTime = new Date(); // Reset to now
+        endTime.setDate(endTime.getDate() + randomInt(3, 10)); // Ends in the future
+    }
 
     const startPrice = template.basePrice;
     const stepPrice = template.basePrice * 0.05; // 5% bid step
@@ -176,21 +185,18 @@ async function main() {
         created_at: createdTime,
         end_time: endTime,
         auto_extend: true,
-        // Images
         images: {
           create: [
             { image_url: `https://placehold.co/600x400?text=${encodeURIComponent(template.name)}` },
             { image_url: `https://placehold.co/600x400/333/fff?text=Detail+View` }
           ]
         },
-        // Description History
         description_history: {
           create: {
             description: randomElement(SAMPLE_DESCRIPTIONS),
             added_at: createdTime
           }
         },
-        // Q&A (Random 0-2 questions)
         q_and_a: {
             create: Array.from({ length: randomInt(0, 2) }).map(() => ({
                 questioner_id: randomElement(bidders).user_id,
@@ -207,19 +213,22 @@ async function main() {
     let currentPrice = startPrice;
     let highestBidderId = null;
     const bidCount = randomInt(6, 15);
-    
-    // Shuffle the bidder list
     const shuffledBidders = [...bidders].sort(() => 0.5 - Math.random());
 
     for (let k = 0; k < bidCount; k++) {
-      const bidder = shuffledBidders[k % shuffledBidders.length]; // Cycle through bidders
+      const bidder = shuffledBidders[k % shuffledBidders.length];
       
-      // Bid price increases
       const increment = stepPrice + randomInt(1, 50);
       const bidAmount = currentPrice + increment;
       
-      // Spread out bid times
-      const bidTime = new Date(createdTime.getTime() + (k * 3600000) + randomInt(0, 300000));
+      // Calculate bid time relative to creation, but ensure it's not in the future for "Open" items
+      // (Unless we want to simulate a very active live auction, but safer to keep bids in the past/present)
+      let bidTime = new Date(createdTime.getTime() + (k * 3600000) + randomInt(0, 300000));
+      
+      // If calculated bidTime is in the future (for open items), cap it to "now"
+      if (bidTime > new Date()) {
+          bidTime = new Date(); 
+      }
 
       await prisma.bidHistory.create({
         data: {
@@ -246,7 +255,7 @@ async function main() {
     
     products.push(updatedProduct);
 
-    // --- WATCHLIST (3-5 followers) ---
+    // --- WATCHLIST & DENIED BIDDERS ---
     const watchers = shuffledBidders.slice(0, randomInt(3, 5));
     for (const watcher of watchers) {
         await prisma.watchlist.create({
@@ -254,7 +263,6 @@ async function main() {
         });
     }
 
-    // --- DENIED BIDDERS (Randomly block 1 user) ---
     if (randomInt(1, 10) > 8) {
         await prisma.deniedBidders.create({
             data: { product_id: product.product_id, bidder_id: shuffledBidders[shuffledBidders.length - 1].user_id }
@@ -263,7 +271,7 @@ async function main() {
   }
 
   // -------------------------------------------------------
-  // 4. CREATE ORDERS, REVIEWS, CHAT (Only for SOLD products)
+  // 4. CREATE ORDERS (Only for SOLD products)
   // -------------------------------------------------------
   const soldProducts = products.filter(p => p.status === ProductStatus.sold);
   
@@ -272,7 +280,6 @@ async function main() {
   for (const p of soldProducts) {
     if (!p.current_highest_bidder_id) continue;
 
-    // Create Order
     const order = await prisma.order.create({
         data: {
             product_id: p.product_id,
@@ -286,7 +293,6 @@ async function main() {
         }
     });
 
-    // Review: Buyer -> Seller
     const buyerReview = await prisma.reviews.create({
         data: {
             product_id: p.product_id,
@@ -294,12 +300,10 @@ async function main() {
             reviewee_id: p.seller_id,
             is_positive: true,
             comment: randomElement(SAMPLE_COMMENTS),
-            // Connect via relation
             order_as_buyer_review: { connect: { order_id: order.order_id } }
         }
     });
 
-    // Review: Seller -> Buyer
     const sellerReview = await prisma.reviews.create({
         data: {
             product_id: p.product_id,
@@ -311,7 +315,6 @@ async function main() {
         }
     });
 
-    // Update Order linking review IDs
     await prisma.order.update({
         where: { order_id: order.order_id },
         data: {
@@ -320,7 +323,6 @@ async function main() {
         }
     });
 
-    // Chat History
     await prisma.orderChat.createMany({
         data: [
             { order_id: order.order_id, sender_id: p.current_highest_bidder_id, message_text: "Hello shop, when will the item be shipped?", sent_at: new Date(p.end_time.getTime() + 100000) },

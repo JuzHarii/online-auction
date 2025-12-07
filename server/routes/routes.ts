@@ -5,6 +5,7 @@ import * as emailController from "../controllers/email.controller.ts";
 import * as productController from "../controllers/product.controllers.ts";
 import path from "path";
 import { getProduct, getProducts, uploadProducts } from "../controllers/product.controllers.ts";
+import { getAdCatergories, getAdProducts, getAdUsers } from "../controllers/admin.controler.ts";
 
 const router = express.Router();
 
@@ -16,12 +17,21 @@ const createUserSchema = {
     name: Joi.string().required().min(3).max(8),
     email: Joi.string().email().required(),
     password: Joi.string().required().min(8).max(30).regex(strongPasswordRegex),
+    code: Joi.string().required(),
+    address: Joi.string().required().min(5).max(100),
+  }),
+};
+
+const userLogin = {
+  [Segments.BODY]: Joi.object({
+    email: Joi.string().email().required(),
+    password: Joi.string().required().min(8).max(30).regex(strongPasswordRegex),
   }),
 };
 
 router.post('/auth/register', celebrate(createUserSchema), authController.register);
 
-router.post('/auth/signin', authController.login);
+router.post('/auth/signin', celebrate(userLogin), authController.login);
 
 router.post('/auth/me', authController.getAuthentication, authController.getAccount);
 
@@ -48,5 +58,11 @@ router.use('/verify', emailController.verifyCode)
 router.use('/changepassword', authController.changePassword)
 
 router.use('/categories', productController.getCategories)
+
+router.use('/admin/categories', getAdCatergories);
+
+router.use('/admin/products', getAdProducts);
+
+router.use('/admin/users', getAdUsers);
 
 export default router;

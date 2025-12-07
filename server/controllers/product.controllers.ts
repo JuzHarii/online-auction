@@ -254,7 +254,7 @@ type SortOrder = 'asc' | 'desc';
 
 export const getProductsLV = async (req: Request, res: Response) => {
   try {
-     const { level1, level2 } = req.params;
+    const { level1, level2 } = req.params;
 
     const sortQuery = req.query.sort as SortField | undefined;
     const orderQuery = req.query.order as SortOrder | undefined;
@@ -265,17 +265,15 @@ export const getProductsLV = async (req: Request, res: Response) => {
     const page = Math.max(1, pageQuery);
     const limit = Math.max(1, limitQuery);
     const skip = (page - 1) * limit;
-
-    const whereClause: any = {
-      category: {
-        name_level_1: String(level1),
-      },
-    };
-
-    if (level2 && level2 !== "*") {
-      whereClause.category.name_level_2 = String(level2);
+    let whereClause: any = {};
+    if (level1 && level1 !== "*") {
+      whereClause.category = {};
+      whereClause.category.name_level_1 = String(level1);
+      if (level2 && level2 !== "*") {
+        whereClause.category.name_level_2 = String(level2);
+      }
     }
-
+   
     let orderByClause: any = {};
     const sortField: SortField = sortQuery && ['end_time', 'current_price'].includes(sortQuery) ? sortQuery : 'end_time';                                    
     const sortOrder: SortOrder = orderQuery && ['asc', 'desc'].includes(orderQuery) ? orderQuery : 'asc';
@@ -323,3 +321,5 @@ export const getProductsLV = async (req: Request, res: Response) => {
     return res.status(500).json(errorResponse(String(e)));
   }
 };
+
+
