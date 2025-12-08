@@ -304,7 +304,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
 // API: PATCH /api/users/profile
 export const editUserProfile = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = res.locals.users.id;
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized: Can't find user" });
     }
