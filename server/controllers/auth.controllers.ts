@@ -6,7 +6,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 export const register = async (req: Request, res: Response) => {
   try {
     const result = await authService.create(req.body);
-
+   
     if (!result.success || !result.user) {
       return res.status(400).json(errorResponse(result.message));
     }
@@ -183,6 +183,19 @@ export const logout = async (req: Request, res: Response) => {
       });
     }
     res.status(200).json(successResponse(null, 'Logged out, all cookies cleared'));
+  } catch (e) {
+    return res.status(500).json(errorResponse(String(e)));
+  }
+};
+
+
+export const checkAdmin = function (req: Request, res: Response) {
+  try {
+    const user = res.locals.user;
+    if (user.role !== 'admin') {
+      return res.status(500).json(errorResponse("Your are not admin"));
+    }
+    return res.status(200).json(successResponse(null, "Access admin page successfully!"));
   } catch (e) {
     return res.status(500).json(errorResponse(String(e)));
   }
