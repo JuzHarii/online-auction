@@ -25,7 +25,7 @@ function HomePage() {
           <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-normal">
             EXPLORE WONDERFUL ITEMS <br /> WITH REASONABLE PRICES
           </h1>
-          <button onClick={(e) =>{e.preventDefault(); console.log("click"); handleClick()}} className="bg-white text-[#8D0000] px-6 py-2 rounded font-semibold hover:bg-[#8D0000] hover:text-white hover:cursor-pointer">
+          <button onClick={(e) =>{e.preventDefault(); handleClick()}} className="bg-white text-[#8D0000] px-6 py-2 rounded font-semibold hover:bg-[#8D0000] hover:text-white hover:cursor-pointer">
             Auction now!
           </button>
         </div>

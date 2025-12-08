@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Package, FolderTree, Users, UserCheck, Settings, LogOut, Menu, X, ChevronDown, Trash2, Eye, Shield, Edit } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // --- Helpers ---
 // Hàm cn: Chỉ chấp nhận string, boolean, hoặc undefined. Sử dụng toán tử && cho điều kiện.
@@ -20,7 +21,7 @@ const API_ENDPOINTS = {
     categories: '/api/admin/categories', // URL API cho Category Management
     products: '/api/admin/products', // URL API cho Product Management
     users: '/api/admin/users', // URL API cho User Management
-    upgradeRequests: '', // URL API cho Upgrade Approval
+    upgradeRequests: '/api/admin/upgradeRequests', // URL API cho Upgrade Approval
 };
 
 // 1. Types cho Category
@@ -47,11 +48,11 @@ interface User {
 }
 // 4. Types cho Upgrade Request
 interface UpgradeRequest {
-    id: number;
+    request_id: number;
     user_id: number;
-    username: string;
-    request_date: string; // Ví dụ: "20/12/2025"
-    document_url: string; // Link đến tài liệu đính kèm
+    name: string;
+    request_at: string; // Ví dụ: "20/12/2025"
+    message: string; // Link đến tài liệu đính kèm
 }
 
 
@@ -108,6 +109,23 @@ const AdminSidebar: React.FC<{ activeTab: AdminTabId; setActiveTab: React.Dispat
     React.memo(({ activeTab, setActiveTab, sidebarOpen, setSidebarOpen }) => {
     
     const iconButtonClass = getButtonClasses('ghost', 'icon', "lg:hidden");
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        (async() => {
+            try {
+                const res = await fetch('/admin', {
+                    credentials: 'include',
+                });
+                const result = await res.json()
+                if (!res.ok || !result.isSuccess) {
+                    navigate('/');
+                }
+            } catch(e) {
+                navigate('/');
+            }
+        })()
+    }, [])
 
     return (
         <aside
@@ -232,11 +250,11 @@ const CategoryManagement: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                        {categories.map((category) => {
+                        {categories.map((category, index) => {
                             const canDelete = category.product_count === 0;
                             
                             return (
-                                <tr key={category.id} className="hover:bg-gray-50">
+                                <tr key={index} className="hover:bg-gray-50">
                                     <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900'>
                                         {category.name}
                                     </td>
@@ -418,6 +436,7 @@ const UpgradeRequestsManagement: React.FC = () => {
     const [requests, setRequests] = useState<UpgradeRequest[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [selectedRequest, setSelectedRequest] = useState<UpgradeRequest | null>(null);
 
     const smPrimaryButtonClass = getButtonClasses('primary', 'sm', "mr-2");
     const smDestructiveButtonClass = getButtonClasses('destructive', 'sm', "");
@@ -439,23 +458,52 @@ const UpgradeRequestsManagement: React.FC = () => {
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supporting Documents</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request Message</th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {requests.map(request => (
-                            <tr key={request.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.username}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.request_date}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 cursor-pointer hover:underline" onClick={() => window.open(request.document_url, '_blank')}>View File</td>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {requests.map(request => (
+                                <tr key={request.request_id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.request_at}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600 cursor-pointer font-medium hover:text-blue-700"
+                                    onClick={() => setSelectedRequest(request)}>
+                                    View File
+                                </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                                     <button className={smPrimaryButtonClass}>Approve</button>
                                     <button className={smDestructiveButtonClass}>Reject</button>
                                 </td>
-                            </tr>
-                        ))}
-                    </tbody>
+                                </tr>
+                            ))}
+
+                            {selectedRequest && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md transform transition-all">
+                                    <h2 className="text-xl font-semibold mb-4 border-b pb-2 text-gray-900">
+                                        Request Message
+                                    </h2>
+                                    
+                                    <div className="max-h-60 overflow-y-auto mb-6 p-2 bg-gray-50 rounded-md border border-gray-200">
+                                    <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                        {selectedRequest.message}
+                                    </p>
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                    <button
+                                        onClick={() => setSelectedRequest(null)}
+                                        className="px-4 py-2 bg-[#8D0000] text-white font-medium rounded-md text-sm hover:cursor-pointer transition duration-150 ease-in-out"
+                                    >
+                                        Close
+                                    </button>
+                                    </div>
+                                </div>
+                                </div>
+                            )}
+                        </tbody>
+
                 </table>
             </div>
         </div>

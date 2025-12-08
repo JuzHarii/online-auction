@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { MemoProductCard } from "../components/product";
 
 type Product = {
-    id?: string | number;
+    id: string | number;
     name: string;
     bid_count: number;
     current_price: string;
@@ -100,67 +100,7 @@ const SortTabs = React.memo(({ activeTab, setActiveTab }: SortTabsProps): JSX.El
     );
 });
 
-const ProductCard = React.memo(({ product }: ProductCardProps): JSX.Element => {
-    const {
-        name,
-        bid_count,
-        current_price,
-        buy_now_price,
-        end_time,
-        created_at,
-        highest_bidder_name,
-        image_url,
-    } = product;
-
-    const handleBuyNowClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        console.log(`Buy now clicked for product ${product.id}`);
-    };
-
-    const handleCardClick = () => {
-        console.log(`Navigating to product ${product.id}`);
-    };
-
-    return (
-        <div
-            className="border border-gray-200 rounded-md overflow-hidden shadow-sm flex flex-col transition-shadow hover:shadow-md cursor-pointer"
-            onClick={handleCardClick}
-        >
-            <div className="aspect-4/3 bg-gray-100 relative">
-                <img
-                    src={`/api/assets/` + image_url || 'https://placehold.co/600x400?text=No+Image'}
-                    alt={name}
-                    className="w-full h-full object-cover"
-                />
-                <p className="text-gray-500 text-xs absolute bottom-[5%] left-[5%] bg-white rounded-2xl p-1.5">Bids count: {bid_count}</p>
-            </div>
-            <div className="p-3 grow flex flex-col text-sm">
-                <h3 className="font-semibold text-gray-800 truncate" title={name}>{name}</h3>
-                <div className="mt-2">
-                    <span className="text-black font-medium">Current price</span>
-                    <p className="font-bold text-[#8D0000] text-lg">{formatCurrency(current_price)}</p>
-                </div>
-                <p className="text-gray-400 text-xs">Posted date {formatDate(created_at)}</p>
-                <div className="mt-2">
-                    <span className="text-black font-semibold">Highest bidder</span>
-                    <p className="font-semibold text-red-600 truncate">{highest_bidder_name || 'No bids yet'}</p>
-                </div>
-                <p className="text-red-600 font-semibold text-xs mt-2 text-end">{calculateTimeRemaining(end_time)}</p>
-            </div>
-            <button
-                className="w-full bg-[#8D0000] text-white font-bold py-2 text-sm hover:bg-red-900 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                disabled={!buy_now_price}
-                onClick={handleBuyNowClick}
-            >
-                {buy_now_price ? `Buy now: ${formatCurrency(buy_now_price)}` : 'Auction Only'}
-            </button>
-        </div>
-    );
-});
-
-// **Responsive Change for Pagination**: Uses less spacing and flex-wrap on mobile
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }: PaginationProps): JSX.Element => {
-    // Ẩn thanh phân trang nếu chỉ có 1 trang hoặc ít hơn
     if (totalPages <= 1) return <></>;
 
     const getPageNumbers = () => {
@@ -235,12 +175,7 @@ export default function ProductsPage(): JSX.Element {
     }, [level1, level2, activeSortTab, itemsPerPage]);
 
     useEffect(() => {
-        if (!level1 || !level2) {
-            console.error("Missing category parameters in URL.");
-            setLoading(false);
-            return;
-        }
-
+        let apiUrlWithParams = ""
         const fetchProducts = async () => {
             setLoading(true);
             const params = new URLSearchParams({
@@ -250,7 +185,12 @@ export default function ProductsPage(): JSX.Element {
                 limit: itemsPerPage.toString(),
             });
 
-            const apiUrlWithParams = `/api/products/${level1}/${level2}?${params.toString()}`;
+            if (!level1 || !level2) {
+                apiUrlWithParams = `/api/products/*/*`
+            } else {
+                apiUrlWithParams = `/api/products/${level1}/${level2}?${params.toString()}`;
+            }
+
             console.log(`Fetching products from: ${apiUrlWithParams}`);
 
             try {
@@ -259,6 +199,7 @@ export default function ProductsPage(): JSX.Element {
                     throw new Error('Network response was not ok');
                 }
                 const data: PaginatedProductsResponse = await res.json();
+                console.log(data);
                 setProducts(data.products || []);
                 setTotalItems(data.totalItems || 0);
             } catch (error) {
@@ -274,10 +215,8 @@ export default function ProductsPage(): JSX.Element {
     }, [level1, level2, activeSortTab, currentPage, itemsPerPage]);
 
     return (
-        // **Responsive Change**: Giảm padding và giới hạn chiều rộng trên mobile
         <div className="w-[95%] sm:w-[90%] max-w-8xl mx-auto py-6 sm:py-8">
             
-            {/* Tiêu đề & Sắp xếp: Chuyển sang flex-col trên mobile */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4"> 
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                     Products in {level1} {level2 !== "*" ? `/ ${level2}` : ""}
@@ -285,7 +224,6 @@ export default function ProductsPage(): JSX.Element {
                 <SortTabs activeTab={activeSortTab} setActiveTab={setActiveSortTab} />
             </div>
             
-            {/* Thông tin Phân trang & Số lượng mục: Chuyển sang flex-col trên mobile */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2 sm:gap-0">
                 <p className="text-gray-600 text-xs sm:text-sm font-medium">
                     {totalItems > 0
@@ -317,8 +255,8 @@ export default function ProductsPage(): JSX.Element {
             ) : products.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
-                        {products.map((product, index) => (
-                            <MemoProductCard key={product.id || index} product={product} />
+                        {products.map((product) => (
+                            <MemoProductCard key={product.id} product={product} />
                         ))}
                     </div>
                     <Pagination

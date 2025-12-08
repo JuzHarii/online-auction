@@ -91,7 +91,7 @@ export default function CategoryMenu(): JSX.Element {
         const label = (key[0].toUpperCase() + key.slice(1)) as string; 
         
         return (
-          <li key={key} className="relative group" onClick={() => handleCategoryClick(key, "*")}>
+          <li key={key} className="relative group" onClick={() => handleCategoryClick(key, "")}>
             <button
               // className="cursor-pointer hover:text-[#8D0000] hover:underline group-hover:text-[#8D0000] group-hover:underline ${}:text-[#8D0000] focus:underline"
               className={`cursor-pointer px-2 py-1 font-semibold hover:text-[#8D0000] hover:underline group-hover:text-[#8D0000] group-hover:underline ${activeLevel1 === key ? 'underline text-[#8D0000]' : ''}`}

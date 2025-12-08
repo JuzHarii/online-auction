@@ -398,6 +398,7 @@ export const getProductsLV = async (req: Request, res: Response) => {
     });
     const formattedProducts = products.map((product) => {
       return {
+        id: String(product.product_id),
         name: product.name,
         bid_count: product.bid_count,
         current_price: product.current_price,

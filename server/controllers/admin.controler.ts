@@ -28,7 +28,7 @@ export const getAdProducts = async (req: Request, res: Response) => {
           end_time: true, 
         },
         orderBy: {
-          end_time: 'asc',
+          end_time: 'desc',
         },
       });
 
@@ -56,6 +56,43 @@ export const getAdUsers = async (req: Request, res: Response) => {
 		const users = await db.prisma.user.findMany();
 
 		return res.status(200).json(successResponse(users, "Get users successfully"))
+
+	} catch(e) {
+    return res.status(500).json(errorResponse(String(e)));
+	}
+}
+
+export const getUpgradeRequest = async (req: Request, res: Response) => {
+  try {
+		const upgradeRequestFromDB = await db.prisma.sellerUpgradeRequest.findMany({
+      where: {
+        is_approved: false,
+        is_denied: false,
+      },
+      select: {
+        request_id: true,
+        message: true,
+        requested_at: true,
+    
+        user: {
+          select: {
+            user_id: true,
+            name: true,
+          },
+        },
+      }
+    });
+
+    const upgradeRequest = upgradeRequestFromDB.map((up) => {     
+      return {
+        request_id: String(up.request_id),
+        user_id: String(up.user.user_id),
+        name: up.user.name,
+        message: up.message,
+        request_at: up.requested_at.toISOString().split("T")[0]
+      };
+    });
+		return res.status(200).json(successResponse(upgradeRequest, "Get upgradeRequest successfully"))
 
 	} catch(e) {
     return res.status(500).json(errorResponse(String(e)));

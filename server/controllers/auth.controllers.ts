@@ -187,3 +187,16 @@ export const logout = async (req: Request, res: Response) => {
     return res.status(500).json(errorResponse(String(e)));
   }
 };
+
+
+export const checkAdmin = function (req: Request, res: Response) {
+  try {
+    const user = res.locals.user;
+    if (user.role !== 'admin') {
+      return res.status(500).json(errorResponse("Your are not admin"));
+    }
+    return res.status(200).json(successResponse(null, "Access admin page successfully!"));
+  } catch (e) {
+    return res.status(500).json(errorResponse(String(e)));
+  }
+};

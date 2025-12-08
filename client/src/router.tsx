@@ -18,6 +18,8 @@ function Router() {
         <Route path="/product/:id" element={<ProductDetail />}></Route>
 
         <Route path="/products/:level1/:level2" element={<Products />}></Route>
+        <Route path="/products/:level1" element={<Products />}></Route>
+        <Route path="/products" element={<Products />}></Route>
       </Route>
 
       <Route path="/register" element={<Register />}></Route>

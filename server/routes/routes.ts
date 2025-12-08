@@ -4,7 +4,7 @@ import { celebrate, Joi, Segments } from "celebrate";
 import * as emailController from "../controllers/email.controller.ts";
 import * as productController from "../controllers/product.controllers.ts";
 import path from "path";
-import { getAdCatergories, getAdProducts, getAdUsers } from "../controllers/admin.controler.ts";
+import { getAdCatergories, getAdProducts, getAdUsers, getUpgradeRequest } from "../controllers/admin.controler.ts";
 import { getProduct, getProductsEndest, uploadProducts } from "../controllers/product.controllers.ts";
 
 const router = express.Router();
@@ -65,12 +65,18 @@ router.use('/verify', emailController.verifyCode)
 
 router.use('/changepassword', authController.changePassword)
 
-router.use('/categories', productController.getCategories)
+router.get('/categories', productController.getCategories)
 
-router.use('/admin/categories', getAdCatergories);
+router.get('/admin', authController.getAuthentication, authController.checkAdmin)
 
-router.use('/admin/products', getAdProducts);
+router.get('/admin/categories', getAdCatergories);
 
-router.use('/admin/users', getAdUsers);
+router.get('/admin/products', getAdProducts);
+
+router.get('/admin/users', getAdUsers);
+
+router.get('/admin/upgradeRequests', getUpgradeRequest);
+
+
 
 export default router;
