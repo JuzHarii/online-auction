@@ -84,7 +84,9 @@ export const BidderSidebar = ({
                 VND
               </div>
             </div>
-            <p className="text-[10px] text-gray-400">Min step: + {formatCurrency(minNextBid.toString())}</p>
+            <p className="text-[10px] text-gray-400">
+              Min step: + {formatCurrency(minNextBid.toString())}
+            </p>
           </div>
 
           {/* Place Bid Button */}
