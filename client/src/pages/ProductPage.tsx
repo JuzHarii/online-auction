@@ -203,7 +203,7 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* --- PHẦN DƯỚI: RELATED PRODUCTS --- */}
+        {/* --- RELATED PRODUCTS --- */}
         {product.relatedProducts && product.relatedProducts.length > 0 && (
           <div className="mt-16 mb-12">
             <div className="flex items-center justify-between mb-6">
