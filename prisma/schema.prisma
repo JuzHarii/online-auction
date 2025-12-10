@@ -104,7 +104,7 @@ model Product {
   name                      String      @db.Text
   status                    ProductStatus @default(open)
   start_price               Decimal     @db.Decimal(12, 2)
-  buy_now_price             Decimal?    @db.Decimal(12, 2)
+  buy_now_price             Decimal    @db.Decimal(12, 2)
   step_price                Decimal     @db.Decimal(10, 2)
   current_price             Decimal     @default(0.00) @db.Decimal(12, 2)
   current_highest_bidder_id String?     @db.Uuid

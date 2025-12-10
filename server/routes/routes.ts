@@ -49,7 +49,7 @@ router.get('/product/:id/bids', authController.getSellerAuthentication, getBidHi
 router.delete('/ban/:productId/:bidderId', authController.getSellerAuthentication, banBidder);
 
 router.post('/bid/:productId', authController.getAuthentication, placeBid);
-
+router.post('/products/:productId/buy-now', authController.getAuthentication, productController.handleBuyNow);
 router.get('/products/:level1/:level2', productController.getProductsLV);
 
 router.post('/upload', authController.getSellerAuthentication, uploadProducts);

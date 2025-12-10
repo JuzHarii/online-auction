@@ -58,8 +58,43 @@ export const BidderSidebar = ({
     }
   };
 
-  const handleBuyNow = () => {
-    alert('Proceeding to buy now checkout...');
+  const handleBuyNow = async () => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to buy this item immediately for ${formatCurrency(buyNowPrice.toString())}?`
+    );
+    
+    if (!isConfirmed) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/products/${product.id}/buy-now`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to process buy now request');
+      }
+
+      alert('Congratulations! You have successfully purchased this item.');
+      
+      onBidSuccess();
+
+      if (data.order && data.order.order_id) {
+        window.location.href = `/orders/${data.order.order_id}`;
+      }
+
+    } catch (error: any) {
+      console.error('Buy Now Error:', error);
+      alert(error.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleAddToWatchList = async () => {
