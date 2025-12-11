@@ -8,8 +8,7 @@ import UploadPage from './pages/UploadPage.tsx';
 import ProductDetail from './pages/ProductPage.tsx';
 import Products from './pages/Products.tsx';
 import AdminPage from './admin/adminpage.tsx';
-import UserProfile
- from './pages/UserProfile.tsx';
+import UserProfile from './pages/UserProfile.tsx';
 function Router() {
   return (
     <Routes>
@@ -19,9 +18,10 @@ function Router() {
         <Route path="/product/:id" element={<ProductDetail />}></Route>
 
         <Route path="/products/:level1/:level2" element={<Products />}></Route>
+        <Route path="/search" element={<Products />} />
         <Route path="/products/:level1" element={<Products />}></Route>
         <Route path="/products" element={<Products />}></Route>
-        <Route path="/profile" element={<UserProfile/>}></Route>
+        <Route path="/profile" element={<UserProfile />}></Route>
       </Route>
 
       <Route path="/register" element={<Register />}></Route>
