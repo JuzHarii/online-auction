@@ -23,6 +23,7 @@ import {
   uploadProducts,
   createProductQA,
   replyProductQA,
+  searchProducts,
 } from '../controllers/product.controllers.ts';
 import { banBidder, getBidHistory, placeBid } from '../controllers/bid.controller.ts';
 
@@ -157,6 +158,9 @@ router.use('/profile/verifyuser', authController.verifyUser);
 router.post('/watch-list/add', authController.getAuthentication, productController.addToWatchList);
 // ===============================
 router.get('/admin/upgradeRequests', getUpgradeRequest);
+
+// Product search route (full-text search)
+router.get('/products/search', productController.searchProducts);
 
 // QA route: ask question about a product
 router.post('/product/:id/qa', authController.getAuthentication, createProductQA);

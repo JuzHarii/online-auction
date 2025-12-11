@@ -677,3 +677,104 @@ export const replyProductQA = async (req: Request, res: Response) => {
     return res.status(500).json({ error: String(error) });
   }
 };
+
+// --- full text search for products ---
+export const searchProducts = async (req: Request, res: Response) => {
+  try {
+    const { keyword, category } = req.query;
+
+    // phan trang (reuse)
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
+    const skip = (page - 1) * limit;
+
+    // sorting (reuse)
+    const sort = req.query.sort as string;
+    let orderBy: any = {};
+
+    if (sort === 'price_asc') {
+      orderBy = { current_price: 'asc' };
+    } else {
+      orderBy = { end_time: 'desc' };
+    }
+
+    // full text search query
+    const searchQuery = keyword ? String(keyword).trim().split(/\s+/).join(' & ') : undefined;
+
+    // sort condition
+    const whereClause: any = {
+      status: 'open',
+      end_time: { gt: new Date() }, // chi lay san pham dang mo ban
+    };
+
+    // * full-text search logic
+    // Neu co tu khoa tim kiem, them dieu kien tim kiem vao whereClause,
+    // nghia la tim trong ten san pham va ten danh muc
+    if (searchQuery) {
+      whereClause.OR = [
+        {
+          name: {
+            search: searchQuery, // tim trong ten san pham
+          },
+        },
+        {
+          category: {
+            name_level_1: { search: searchQuery }, // tim trong danh muc lv 1
+          },
+        },
+        {
+          category: {
+            name_level_2: { search: searchQuery }, // tim trong danh muc lv 2
+          },
+        },
+      ];
+    }
+
+    // sort condition for category filter
+    if (category) {
+      // condition: neu da co dieu kien category o trong tu khoa tim kiem, thi them dieu kien vao trong do
+      whereClause.category = {
+        ...whereClause.category, // giu nguyen dieu kien category neu co
+        name_level_1: { contains: String(category), mode: 'insensitive' },
+      };
+    }
+
+    // Dem tong so san pham thoa dieu kien de phan trang
+    const totalItems = await db.prisma.product.count({ where: whereClause });
+
+    // danh sach san pham thoa dieu kien tim kiem
+    const products = await db.prisma.product.findMany({
+      where: whereClause,
+      orderBy: orderBy,
+      skip: skip,
+      take: limit,
+      include: {
+        current_highest_bidder: true,
+        images: { take: 1, orderBy: { image_id: 'asc' }, select: { image_url: true } },
+      },
+    });
+
+    // --- formart data (reuse tu getProductsLV) ---
+    const formattedProducts = products.map((product) => ({
+      id: product.product_id.toString(),
+      name: product.name,
+      current_price: product.current_price.toString(),
+      buy_now_price: product.buy_now_price ? product.buy_now_price.toString() : null,
+      bid_count: product.bid_count,
+      end_time: product.end_time,
+      created_at: product.created_at,
+      image_url: product.images[0]?.image_url || null,
+      highest_bidder_name: product.current_highest_bidder?.name || null,
+    }));
+
+    return res.status(200).json({
+      products: formattedProducts, // Tra ve key 'products' cho giong cau truc getProductsLV
+      totalItems: totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      currentPage: page,
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json(errorResponse(String(e)));
+  }
+};
