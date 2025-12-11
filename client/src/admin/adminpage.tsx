@@ -25,7 +25,7 @@ const API_ENDPOINTS = {
 
 interface Category { id: number; name: string; parent_id: number | null; parent_name: string | null; product_count: number; }
 interface Product { id: number; name: string; current_price: number; status: 'Active Auction' | 'Ended' | 'Draft'; }
-interface User { id: number; name: string; email: string; role: string; }
+interface User { id: number; name: string; email: string; role: string; address: string; created_at: Date; birthdate: Date | null; minus_review: number; plus_review: number; updated_at: Date}
 interface UpgradeRequest { request_id: number; user_id: number; name: string; request_at: string; message: string; }
 
 const ADMIN_SIDEBAR_ITEMS: SidebarItem[] = [
@@ -555,6 +555,15 @@ const UserManagement: React.FC<{ setActiveTab: React.Dispatch<React.SetStateActi
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+    const openViewModal = (user: User) => {
+        setSelectedUser(user);
+        setIsViewModalOpen(true);
+    };
+
+
     const iconGhostBlueClass = getButtonClasses('ghost', 'icon', "text-blue-600 hover:text-blue-800 mr-2");
     const iconDestructiveClass = getButtonClasses('destructive', 'icon', "");
 
@@ -614,13 +623,57 @@ const UserManagement: React.FC<{ setActiveTab: React.Dispatch<React.SetStateActi
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                                    <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button>
+                                    {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
+                                    {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
+                                    <button
+                                        className={iconGhostBlueClass}
+                                        title="View Details"
+                                        onClick={() =>{console.log(user); openViewModal(user)}}
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </button>
+
                                     <button className={iconDestructiveClass} title="Remove Product" onClick={() => handleDeleteUser(user)}><Trash2 className="h-4 w-4" /></button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
+                {isViewModalOpen && selectedUser && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                       <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-2xl space-y-4">
+                        <h2 className="text-2xl font-semibold mb-4 text-gray-800">User Details</h2>
+                        <div className="grid grid-cols-2 gap-4 text-gray-700">
+                            <div className="font-medium">Name:</div>
+                                <div>{selectedUser.name}</div>
+                            <div className="font-medium">Email:</div>
+                                <div>{selectedUser.email}</div>
+                            <div className="font-medium">Address:</div>
+                                <div>{selectedUser.address || ""}</div>
+                            <div className="font-medium">Role:</div>
+                                <div>{selectedUser.role}</div>
+                            <div className="font-medium">Plus Review:</div>
+                                <div>{selectedUser.plus_review}</div>
+                            <div className="font-medium">Minus Review:</div>
+                                <div>{selectedUser.minus_review}</div>
+                            <div className="font-medium">Birth Date:</div>
+                                <div>{selectedUser.birthdate ? new Date(selectedUser.birthdate).toLocaleDateString("vi-VN",{ hour: "2-digit", minute: "2-digit",second: "2-digit",}) : ""}</div> 
+                            <div className="font-medium">Created At:</div>
+                                <div>{new Date(selectedUser.created_at).toLocaleDateString("vi-VN",{ hour: "2-digit", minute: "2-digit",second: "2-digit",})} </div>
+                            <div className="font-medium">Updated At:</div>
+                                <div>{new Date(selectedUser.updated_at).toLocaleDateString("vi-VN",{ hour: "2-digit", minute: "2-digit",second: "2-digit",})}</div> 
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                onClick={() => setIsViewModalOpen(false)}
+                                className="px-4 py-2 bg-[#8D0000] text-white font-medium rounded-md text-sm hover:cursor-pointer transition duration-150 ease-in-out"
+                            >
+                                Close
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
