@@ -4,8 +4,7 @@ import userIcon from '../assets/user.png'
 import { useUser } from '../UserContext'
 import { ProfileData } from "../components/user-profile/types"
 import UserAction from "../components/user-profile/user-profile"
-
-
+import { Link } from "react-router-dom"
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -149,7 +148,8 @@ export default function UserProfile() {
             ">
               Let me sell
             </button>
-            : <button className="
+            : <Link to="/upload" className="
+              text-center
               cursor-pointer bg-yellow-300 text-black-800
               hover:bg-yellow-400 hover:scale-101
               active:scale-95 
@@ -157,7 +157,7 @@ export default function UserProfile() {
               rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-2
             ">
               Add product
-            </button>
+            </Link>
             }
             
 
