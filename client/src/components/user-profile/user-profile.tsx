@@ -71,7 +71,6 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
   };
 
   const addressDefaults = getAddressParts(profile.address);
-  console.log(addressDefaults.ward)
 
   const {
     register,
@@ -92,7 +91,8 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
     }
   })
 
-  // const navigate = useNavigate()
+  console.log("Hế lô KD")
+  console.log(watch('ward'))
 
   const [loading, setLoading] = useState(false)
   const [disable, setDisable] = useState(true)
@@ -144,6 +144,7 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
   const [province, setProvince] = useState<LocationOption[]>([])
   const [ward, setWard] = useState<LocationOption[]>([])
   const provinceCur = watch("province");
+  const wardCurr = watch("ward");
 
   const fetchJsonData = async (url: string) => {
     const res = await fetch(url);
@@ -217,7 +218,7 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
         {/* 2. Email */}
         <div className='flex flex-col gap-2'>
           <label htmlFor="email" className="font-semibold text-gray-900">Email</label>
-          <div className='flex flex-col sm:flex-row gap-2'> {/* Thêm flex-col trên mobile, flex-row trên sm+ */}
+          <div className='flex flex-col sm:flex-row gap-2'>
             <input 
                 type="text" 
                 id="email" 
@@ -260,7 +261,7 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
           <div className="flex flex-col gap-2">
             <label htmlFor="ward" className="font-semibold text-gray-900" >Ward</label>
             <select id="ward"
-              
+              value={wardCurr}
               {...register("ward")} 
               className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]" >
               <option value="">Select ward</option>
