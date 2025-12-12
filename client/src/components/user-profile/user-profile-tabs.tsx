@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProfileData } from "./types";
 import { SetTab } from "./types";
-import { Eye, ThumbsDown, ThumbsUp, Trash } from "lucide-react";
+import { Loader2, ThumbsDown, ThumbsUp, Trash } from "lucide-react";
 import { calculateTimeRemaining, formatCurrency, formatDate } from "../product";
 import { Link } from "react-router-dom";
+import { error } from "console";
 
 function BiddingTab({ profile, setTab }: { profile: ProfileData; setTab: SetTab }) {  
   return(
@@ -27,14 +28,9 @@ function BiddingTab({ profile, setTab }: { profile: ProfileData; setTab: SetTab 
                   <Link to={`/product/${product.product_id}`} className="hover:text-[#8D0000] cursor-pointer text-2xl font-bold">{product.name}</Link>
                   <div className="text-md text-gray-400">{product.category_name}</div>
                 </div>
-                <div className="min-w-0">
-                  <div className="flex flex-row gap-5">
-                    <Eye/>
-                    <Trash/>
-                  </div>
-                  <div className="flex flex-col gap-5">
-                    <div className="font-medium text-[#8D0000]">{calculateTimeRemaining(product.end_time)}</div>
-                  </div>
+                <div className="flex flex-col place-items-end">
+                  <Trash/>
+                  <div className="font-medium text-[#8D0000]">{calculateTimeRemaining(product.end_time)}</div>
                 </div>
               </div>
               <div className="flex flex-row gap-5">
@@ -80,17 +76,9 @@ function WonTab({ profile, setTab }: { profile: ProfileData; setTab: SetTab }) {
               <img src={`/api/assets/${product.image_url}`} className="rounded-sm w-auto h-full object-contain"/>
             </Link>
             <div className="flex flex-col gap-5 flex-grow">
-              <div className="flex flex-row gap-5 justify-between">
-                <div>
-                  <Link to={`/product/${product.product_id}`} className="hover:text-[#8D0000] cursor-pointer text-2xl font-bold">{product.name}</Link>
-                  <div className="text-md text-gray-400">{product.category_name}</div>
-                </div>
-                <div className="min-w-0">
-                <div className="flex flex-row gap-5">
-                  <Eye/>
-                  <Trash/>
-                </div>
-                </div>
+              <div>
+                <Link to={`/product/${product.product_id}`} className="hover:text-[#8D0000] cursor-pointer text-2xl font-bold">{product.name}</Link>
+                <div className="text-md text-gray-400">{product.category_name}</div>
               </div>
               <div className="flex flex-row gap-5">
                 <div className="flex-1 min-w-0">
@@ -114,10 +102,51 @@ function WonTab({ profile, setTab }: { profile: ProfileData; setTab: SetTab }) {
 }
 
 function WatchlistTab({ profile, setTab }: { profile: ProfileData; setTab: SetTab }) {  
+  const [localWatchlist, setLocalWatchlist] = useState(profile.watchlist);
+  const [deletingId, setDeletingId] = useState<number | bigint | string | null>(null);
+  useEffect(() => {
+    setLocalWatchlist(profile.watchlist);
+  }, [profile.watchlist])
+
+  const handleRemoveFromWatchlist = async (producID: number | bigint | string) => {
+    if (!window.confirm("Confirm to delete this product from watchlist?")) return;
+    setDeletingId(producID);
+
+    try {
+      const res = await fetch(`/api/watch-list/${producID}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (res.ok) {
+        // Xóa thành công -> Cập nhật state để loại bỏ item khỏi giao diện ngay lập tức
+        setLocalWatchlist((prev) => prev.filter(item => item.product_id !== producID));
+        profile.watchlist_count -= 1;
+      } else {
+        const errorData = await res.json();
+        alert(errorData.message || "Can't remove product from watchlist");
+      }
+
+
+    } catch(e:any) {
+      console.log(e.mesage);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return(
     <div className="flex flex-col gap-5">
       <p className="text-gray-500">Following {profile.watchlist.length} product{profile.watchlist.length > 1 ? "s" : ""}</p>
-      {profile.watchlist.map((product, index) => {
+      
+      {localWatchlist.length === 0 && (
+        <div className="text-center py-10 text-gray-400">Chưa theo dõi sản phẩm nào.</div>
+      )}
+      
+      {localWatchlist.map((product, index) => {
+        const isDeleting = deletingId === product.product_id;
         return (
           <div 
             key={index}
@@ -135,14 +164,23 @@ function WatchlistTab({ profile, setTab }: { profile: ProfileData; setTab: SetTa
                   <Link to={`/product/${product.product_id}`} className="hover:text-[#8D0000] cursor-pointer text-2xl font-bold">{product.name}</Link>
                   <div className="text-md text-gray-400">{product.category_name}</div>
                 </div>
-                <div className="min-w-0">
-                  <div className="flex flex-row gap-5">
-                    <Eye/>
-                    <Trash/>
-                  </div>
-                  <div className="flex flex-col gap-5">
-                    <div className="font-medium text-[#8D0000]">{calculateTimeRemaining(product.end_time)}</div>
-                  </div>
+                <div className="flex flex-col place-items-end">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemoveFromWatchlist(product.product_id);
+                    }}
+                    disabled={isDeleting}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors group"
+                    title="Unfollow"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="animate-spin text-gray-400 w-5 h-5" />
+                    ) : (
+                      <Trash className="text-gray-500 hover:text-[#8D0000] transition-colors duration-200" />
+                    )}
+                  </button>
+                  <div className="font-medium text-[#8D0000]">{calculateTimeRemaining(product.end_time)}</div>
                 </div>
               </div>
               <div className="flex flex-row gap-5">

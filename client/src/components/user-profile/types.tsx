@@ -56,7 +56,7 @@ export type ProfileData = {
   name: string;
   email: string;
   address: string;
-  birthdate: Date;
+  birthdate: string;
   role: string;
   created_at: string;
   total_bids: number;

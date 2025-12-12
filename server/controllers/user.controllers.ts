@@ -6,6 +6,9 @@ import { authenticateUser, changePassword } from "../services/auth.services";
 import { errorResponse } from "../utils/response";
 import { string } from "zod";
 import { Decimal } from "@prisma/client/runtime/library";
+import { profile } from "console";
+import { ResolveFnOutput } from "module";
+import { useParams } from "react-router-dom";
 
 const prisma = new PrismaClient();
 
@@ -145,7 +148,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       buy_now_price: item.product.buy_now_price ? Number(item.product.buy_now_price) : undefined,
       current_price: Number(item.product.current_price),
       bid_count: item.product.bid_count,
-      end_time: item.product.end_time.toDateString(),
+      end_time: item.product.end_time? new Date(item.product.end_time).toDateString() : "",
 
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
@@ -176,7 +179,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       name: item.product.name,
       image_url: item.product.images[0]?.image_url,
       final_price: Number(item.final_price),
-      won_at: item.created_at.toDateString(),
+      won_at: item.created_at? new Date(item.created_at).toLocaleDateString() : "",
       order_status: item.status,
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
@@ -206,7 +209,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       current_price: Number(item.product.current_price),
       buy_now_price: item.product.buy_now_price ? Number(item.product.buy_now_price) : undefined,
       bid_count: item.product.bid_count,
-      end_time: item.product.end_time.toDateString(),
+      end_time: item.product.end_time? new Date(item.product.end_time).toDateString() : "",
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
       current_highest_bidder_name: item.product.current_highest_bidder?.name
@@ -226,7 +229,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       reviewer_name: item.reviewer.name,
       is_positive: item.is_positive,
       comment: item.comment,
-      created_at: item.created_at.toDateString(),
+      created_at: item.created_at ? new Date(item.created_at).toDateString() : "",
       product_name: item.product.name,
       product_id: Number(item.product.product_id),
     }));
@@ -234,10 +237,10 @@ export const getMyProfile = async (req: Request, res: Response) => {
     res.json({
       name: user.name,
       email: user.email,
-      birthdate: user.birthdate,
+      birthdate: user.birthdate? new Date(user.birthdate).toLocaleDateString() : "",
       address: user.address,
       role: user.role,
-      created_at: user.created_at,
+      created_at: user.created_at ? new Date(user.created_at).toLocaleDateString() : "",
       total_bids: totalBids,
       bids_this_week: bidsThisWeek,
       total_wins: totalWins,
@@ -272,7 +275,7 @@ export const editUserProfile = async (req: Request, res: Response) => {
     const { name, email, birthdate, address } = req.body as {
       name?: string;
       email?: string;
-      birthdate?: Date; // format: "1999-12-31"
+      birthdate?: string; // format: "1999-12-31"
       address?: string;
     };
 
@@ -344,3 +347,42 @@ export const editUserProfile = async (req: Request, res: Response) => {
     console.log("Failed rồi\n")
     return res.status(500).json(errorResponse(e));  }
 };
+
+export const deleteWatchlistProduct = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    const {product_id} = req.params;
+    if (!product_id) {
+        return res.status(400).json({ message: "Product ID is required" });
+    }
+
+
+    const result = await prisma.watchlist.deleteMany({
+      where: {
+        user_id: user_id,
+        product_id: BigInt(product_id)
+      }
+    })
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Product not found in your watchlist" });
+    }
+
+    return res.status(200).json({ message: "Removed product from watchlist successfully" });
+
+  } catch (error) {
+    console.error("Delete watchlist error:", error);
+    
+    // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
+    if (error instanceof SyntaxError || (error as any).code === 'P2002') { 
+      return res.status(400).json({ message: "Invalid Product ID format" });
+    }
+
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+
+}

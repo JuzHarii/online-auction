@@ -37,7 +37,41 @@ export const getAddressParts = (fullAddress?: string | null) => {
 };
 
 function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: SetAction} ) {
+
+const formatDateForInput = (dateInput?: string | Date | null) => {
+    if (!dateInput) return "";
+
+    // Trường hợp 1: Nếu là chuỗi dạng "d/m/y" (VD: "7/5/2005" hoặc "13/05/2005")
+    if (typeof dateInput === 'string' && dateInput.includes('/')) {
+      const parts = dateInput.split('/');
+      // Giả định format là D/M/YYYY (Việt Nam)
+      if (parts.length === 3) {
+        let d = parts[1].padStart(2, '0');
+        let m = parts[0].padStart(2, '0');
+        let y = parts[2];
+        
+        // Logic check: Nếu input là M/D/Y (Mỹ) mà server trả về (VD: 12/31/2005)
+        // Nếu số đầu > 12 thì chắc chắn là Ngày -> Giữ nguyên D/M/Y
+        // Nếu số thứ 2 > 12 thì chắc chắn số 2 là Ngày -> Đảo thành M/D/Y
+        // Tuy nhiên, ưu tiên ép kiểu về YYYY-MM-DD
+        return `${y}-${m}-${d}`;
+      }
+    }
+
+    // Trường hợp 2: Date object hoặc ISO String chuẩn
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return "";
+
+    // Dùng getFullYear/Month/Date để tránh bị lệch múi giờ (UTC vs Local)
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+    const dd = String(date.getDate()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const addressDefaults = getAddressParts(profile.address);
+  console.log(addressDefaults.ward)
 
   const {
     register,
@@ -50,7 +84,7 @@ function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: S
     defaultValues: {
       name: profile.name,
       email: profile.email,
-      birthdate: formatDate(profile.birthdate?.toLocaleDateString()),
+      birthdate: formatDateForInput(profile.birthdate),
       homenumber: addressDefaults.homenumber,
       street: addressDefaults.street,
       ward: addressDefaults.ward,
@@ -176,7 +210,7 @@ function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: S
           {errors.name && <span className='text-[#8D0000]'>{errors.name.message}</span>}
         </div>
 
-        {/* 2. Email and Send Code */}
+        {/* 2. Email */}
         <div className='flex flex-col gap-2'>
           <label htmlFor="email" className="font-semibold text-gray-900">Email</label>
           <div className='flex flex-col sm:flex-row gap-2'> {/* Thêm flex-col trên mobile, flex-row trên sm+ */}
@@ -222,6 +256,7 @@ function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: S
           <div className="flex flex-col gap-2">
             <label htmlFor="ward" className="font-semibold text-gray-900" >Ward</label>
             <select id="ward"
+              
               {...register("ward")} 
               className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]" >
               <option value="">Select ward</option>
