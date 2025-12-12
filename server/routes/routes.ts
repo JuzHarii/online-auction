@@ -16,7 +16,7 @@ import {
   responseUpgradeRequest,
   updateCategory,
 } from '../controllers/admin.controler.ts';
-import { editUserProfile, getMyProfile } from '../controllers/user.controllers.ts';
+import * as userControllers from '../controllers/user.controllers.ts';
 import {
   getProduct,
   getProductsEndest,
@@ -153,11 +153,19 @@ router.put(
 );
 
 // ===== PROFILE PAGE'S API =====
-router.get('/profile', authController.getAuthentication, getMyProfile);
-router.patch('/profile', authController.getAuthentication, editUserProfile);
+router.get('/profile', authController.getAuthentication, userControllers.getMyProfile);
+router.patch('/profile', authController.getAuthentication, userControllers.editUserProfile);
 router.use('/profile/verifyuser', authController.verifyUser);
 router.post('/watch-list/add', authController.getAuthentication, productController.addToWatchList);
+router.delete('/watch-list/:product_id', authController.getAuthentication, userControllers.deleteWatchlistProduct)
+router.delete('/seller-list/:product_id', authController.getAuthentication, userControllers.deleteSellerlistProduct)
+
+router.post('/profile/role', authController.getAuthentication, userControllers.requestRole);
+
+router.get('/profile/seller/products', authController.getSellerAuthentication, userControllers.getSellerProducts)
+
 // ===============================
+
 router.get('/admin/upgradeRequests', getUpgradeRequest);
 
 // Product search route (full-text search)
