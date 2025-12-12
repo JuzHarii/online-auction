@@ -157,9 +157,14 @@ router.patch('/profile', authController.getAuthentication, userControllers.editU
 router.use('/profile/verifyuser', authController.verifyUser);
 router.post('/watch-list/add', authController.getAuthentication, productController.addToWatchList);
 router.delete('/watch-list/:product_id', authController.getAuthentication, userControllers.deleteWatchlistProduct)
+router.delete('/seller-list/:product_id', authController.getAuthentication, userControllers.deleteSellerlistProduct)
+
 router.post('/profile/role', authController.getAuthentication, userControllers.requestRole);
 
+router.get('/profile/seller/products', authController.getSellerAuthentication, userControllers.getSellerProducts)
+
 // ===============================
+
 router.get('/admin/upgradeRequests', getUpgradeRequest);
 
 // Product search route (full-text search)

@@ -4,7 +4,7 @@ import { ProductStatus, OrderStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { authenticateUser, changePassword } from "../services/auth.services";
 import { errorResponse, successResponse } from "../utils/response";
-import { locales, string } from "zod";
+import { json, locales, string } from "zod";
 import { Decimal } from "@prisma/client/runtime/library";
 import { profile } from "console";
 import { ResolveFnOutput } from "module";
@@ -348,6 +348,54 @@ export const editUserProfile = async (req: Request, res: Response) => {
     return res.status(500).json(errorResponse(e));  }
 };
 
+export const getSellerProducts = async (req: Request, res: Response) => {
+  try {
+    const userID = res.locals.user.id;
+    if (!userID) return res.status(401).json({ message: "Unauthorized: Can't find user" });
+
+    const products = await prisma.product.findMany({
+      where: {
+        seller_id: userID,
+        status: ProductStatus.open,
+        end_time: { gt: new Date() }
+      },
+      include: {
+        images: true,
+        category: true,
+        current_highest_bidder: {
+          select: { name: true }
+        }
+      },
+      orderBy: { created_at: 'desc' }
+    })
+
+    const formattedProducts = products.map((product) => ({
+      product_id: product.product_id.toString(),
+      product_name: product.name,
+      image_url: product.images[0]?.image_url || "",
+      category_name: `${product.category.name_level_1} > ${product.category.name_level_2}`,
+      start_price: Number(product.start_price),     // Convert Decimal sang Number
+      current_price: Number(product.current_price),
+      buy_now_price: Number(product.buy_now_price),
+      
+      bid_count: product.bid_count,
+      created_at: product.created_at ? new Date(product.created_at).toLocaleDateString() : "",
+      end_time: product.end_time ? new Date(product.end_time).toLocaleDateString() : "",
+      
+      highest_bidder_name: product.current_highest_bidder?.name || "None"
+    }));
+
+    // 4. Trả về kết quả
+    return res.json(successResponse(formattedProducts, "Get seller products list failed"));
+
+  } catch (e) {
+    console.error("Get seller products error:", e);
+    // Xử lý lỗi BigInt serialize nếu chưa cấu hình global
+    const message = e instanceof Error ? e.message : String(e);
+    return res.status(500).json(errorResponse(message));
+  }
+}
+
 export const deleteWatchlistProduct = async (req: Request, res: Response) => {
   try {
     const user_id = res.locals.user.id;
@@ -376,6 +424,47 @@ export const deleteWatchlistProduct = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error("Delete watchlist error:", error);
+    
+    // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
+    if (error instanceof SyntaxError || (error as any).code === 'P2002') { 
+      return res.status(400).json({ message: "Invalid Product ID format" });
+    }
+
+    return res.status(500).json(errorResponse(String(error)));
+  }
+}
+
+export const deleteSellerlistProduct = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    const {product_id} = req.params;
+    if (!product_id) {
+        return res.status(400).json({ message: "Product ID is required" });
+    }
+
+
+    const result = await prisma.product.updateMany({
+      where: {
+        seller_id: user_id,
+        product_id: BigInt(product_id)
+      },
+      data: {
+        status: ProductStatus.removed
+      }
+    })
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Product not found in your watchlist" });
+    }
+
+    return res.status(200).json({ message: "Removed product from watchlist successfully" });
+
+  } catch (error) {
+    console.error("Delete seller list error:", error);
     
     // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
     if (error instanceof SyntaxError || (error as any).code === 'P2002') { 
@@ -439,7 +528,4 @@ export const requestRole = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json(errorResponse(String(error)));
   }
-
-
-
 }
