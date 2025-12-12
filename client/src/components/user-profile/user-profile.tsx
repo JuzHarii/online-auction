@@ -134,6 +134,10 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
       console.error('[v0] Update error:', err);
     } finally {
       setLoading(false);
+      profile.name = data.name
+      profile.email = data.email
+      profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`
+      profile.birthdate = data.birthdate? data.birthdate:""
     }
   }
 
