@@ -3,9 +3,12 @@ import { PrismaClient } from '@prisma/client';
 import { ProductStatus, OrderStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { authenticateUser, changePassword } from "../services/auth.services";
-import { errorResponse } from "../utils/response";
-import { string } from "zod";
+import { errorResponse, successResponse } from "../utils/response";
+import { json, locales, string } from "zod";
 import { Decimal } from "@prisma/client/runtime/library";
+import { profile } from "console";
+import { ResolveFnOutput } from "module";
+import { useParams } from "react-router-dom";
 
 const prisma = new PrismaClient();
 
@@ -145,7 +148,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       buy_now_price: item.product.buy_now_price ? Number(item.product.buy_now_price) : undefined,
       current_price: Number(item.product.current_price),
       bid_count: item.product.bid_count,
-      end_time: item.product.end_time.toDateString(),
+      end_time: item.product.end_time? new Date(item.product.end_time).toDateString() : "",
 
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
@@ -176,7 +179,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       name: item.product.name,
       image_url: item.product.images[0]?.image_url,
       final_price: Number(item.final_price),
-      won_at: item.created_at.toDateString(),
+      won_at: item.created_at? new Date(item.created_at).toLocaleDateString() : "",
       order_status: item.status,
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
@@ -206,7 +209,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       current_price: Number(item.product.current_price),
       buy_now_price: item.product.buy_now_price ? Number(item.product.buy_now_price) : undefined,
       bid_count: item.product.bid_count,
-      end_time: item.product.end_time.toDateString(),
+      end_time: item.product.end_time? new Date(item.product.end_time).toDateString() : "",
       seller_name: item.product.seller.name,
       category_name: `${item.product.category.name_level_1} > ${item.product.category.name_level_2}`,
       current_highest_bidder_name: item.product.current_highest_bidder?.name
@@ -226,7 +229,7 @@ export const getMyProfile = async (req: Request, res: Response) => {
       reviewer_name: item.reviewer.name,
       is_positive: item.is_positive,
       comment: item.comment,
-      created_at: item.created_at.toDateString(),
+      created_at: item.created_at ? new Date(item.created_at).toDateString() : "",
       product_name: item.product.name,
       product_id: Number(item.product.product_id),
     }));
@@ -234,10 +237,10 @@ export const getMyProfile = async (req: Request, res: Response) => {
     res.json({
       name: user.name,
       email: user.email,
-      birthdate: user.birthdate,
+      birthdate: user.birthdate? new Date(user.birthdate).toLocaleDateString() : "",
       address: user.address,
       role: user.role,
-      created_at: user.created_at,
+      created_at: user.created_at ? new Date(user.created_at).toLocaleDateString() : "",
       total_bids: totalBids,
       bids_this_week: bidsThisWeek,
       total_wins: totalWins,
@@ -272,7 +275,7 @@ export const editUserProfile = async (req: Request, res: Response) => {
     const { name, email, birthdate, address } = req.body as {
       name?: string;
       email?: string;
-      birthdate?: Date; // format: "1999-12-31"
+      birthdate?: string; // format: "1999-12-31"
       address?: string;
     };
 
@@ -344,3 +347,185 @@ export const editUserProfile = async (req: Request, res: Response) => {
     console.log("Failed rồi\n")
     return res.status(500).json(errorResponse(e));  }
 };
+
+export const getSellerProducts = async (req: Request, res: Response) => {
+  try {
+    const userID = res.locals.user.id;
+    if (!userID) return res.status(401).json({ message: "Unauthorized: Can't find user" });
+
+    const products = await prisma.product.findMany({
+      where: {
+        seller_id: userID,
+        status: ProductStatus.open,
+        end_time: { gt: new Date() }
+      },
+      include: {
+        images: true,
+        category: true,
+        current_highest_bidder: {
+          select: { name: true }
+        }
+      },
+      orderBy: { created_at: 'desc' }
+    })
+
+    const formattedProducts = products.map((product) => ({
+      product_id: product.product_id.toString(),
+      product_name: product.name,
+      image_url: product.images[0]?.image_url || "",
+      category_name: `${product.category.name_level_1} > ${product.category.name_level_2}`,
+      start_price: Number(product.start_price),     // Convert Decimal sang Number
+      current_price: Number(product.current_price),
+      buy_now_price: Number(product.buy_now_price),
+      
+      bid_count: product.bid_count,
+      created_at: product.created_at ? new Date(product.created_at).toLocaleDateString() : "",
+      end_time: product.end_time ? new Date(product.end_time).toLocaleDateString() : "",
+      
+      highest_bidder_name: product.current_highest_bidder?.name || "None"
+    }));
+
+    // 4. Trả về kết quả
+    return res.json(successResponse(formattedProducts, "Get seller products list failed"));
+
+  } catch (e) {
+    console.error("Get seller products error:", e);
+    // Xử lý lỗi BigInt serialize nếu chưa cấu hình global
+    const message = e instanceof Error ? e.message : String(e);
+    return res.status(500).json(errorResponse(message));
+  }
+}
+
+export const deleteWatchlistProduct = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    const {product_id} = req.params;
+    if (!product_id) {
+        return res.status(400).json({ message: "Product ID is required" });
+    }
+
+
+    const result = await prisma.watchlist.deleteMany({
+      where: {
+        user_id: user_id,
+        product_id: BigInt(product_id)
+      }
+    })
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Product not found in your watchlist" });
+    }
+
+    return res.status(200).json({ message: "Removed product from watchlist successfully" });
+
+  } catch (error) {
+    console.error("Delete watchlist error:", error);
+    
+    // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
+    if (error instanceof SyntaxError || (error as any).code === 'P2002') { 
+      return res.status(400).json({ message: "Invalid Product ID format" });
+    }
+
+    return res.status(500).json(errorResponse(String(error)));
+  }
+}
+
+export const deleteSellerlistProduct = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    const {product_id} = req.params;
+    if (!product_id) {
+        return res.status(400).json({ message: "Product ID is required" });
+    }
+
+
+    const result = await prisma.product.updateMany({
+      where: {
+        seller_id: user_id,
+        product_id: BigInt(product_id)
+      },
+      data: {
+        status: ProductStatus.removed
+      }
+    })
+
+    if (result.count === 0) {
+      return res.status(404).json({ message: "Product not found in your watchlist" });
+    }
+
+    return res.status(200).json({ message: "Removed product from watchlist successfully" });
+
+  } catch (error) {
+    console.error("Delete seller list error:", error);
+    
+    // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
+    if (error instanceof SyntaxError || (error as any).code === 'P2002') { 
+      return res.status(400).json({ message: "Invalid Product ID format" });
+    }
+
+    return res.status(500).json(errorResponse(String(error)));
+  }
+}
+
+export const requestRole = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    const { message } = req.body as {
+      message: string
+    };
+
+    const existingRequest = await prisma.sellerUpgradeRequest.findUnique({
+      where: { user_id: user_id }
+    });
+
+    // Nếu đã có record
+    if (existingRequest) {
+      // Trường hợp 1: Đã là Seller hoặc đã được duyệt
+      if (existingRequest.is_approved) {
+        return res.status(400).json({ message: "You are already a Seller" });
+      }
+
+      // Trường hợp 2: Đang chờ duyệt (Chưa duyệt và chưa bị từ chối)
+      if (!existingRequest.is_approved && !existingRequest.is_denied) {
+        return res.status(409).json({ message: "Request is pending approval" });
+      }
+      
+      // Trường hợp 3: Đã bị từ chối trước đó -> Cho phép gửi lại (UPDATE record cũ)
+      // Reset is_denied = false, cập nhật message và thời gian gửi
+      const updatedResult = await prisma.sellerUpgradeRequest.update({
+        where: { user_id: user_id },
+        data: {
+            message: message,
+            is_denied: false,       // Reset trạng thái từ chối
+            is_approved: false,     // Đảm bảo chưa duyệt
+            requested_at: new Date() // Cập nhật lại thời gian gửi
+        }
+      });
+
+      return res.json(successResponse(null, updatedResult.message ? updatedResult.message : "Re-submitted request successfully"));
+    }
+
+    const result = await prisma.sellerUpgradeRequest.create({
+      data: {
+        user_id: user_id,
+        message: message
+      }
+    })
+
+    return res.json(successResponse(null, result.message? result.message : "Success"))
+  } catch (error) {
+    return res.status(500).json(errorResponse(String(error)));
+  }
+}

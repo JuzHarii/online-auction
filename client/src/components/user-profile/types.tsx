@@ -52,11 +52,28 @@ type ReviewReceived = {
   product_id: number;
 };
 
+export type ProductItem = {
+  product_id: string;
+  product_name: string;
+  image_url: string;
+  category_name: string;
+
+  start_price: number;
+  current_price: number;
+  buy_now_price?: number;
+
+  bid_count: number;
+  created_at: string;
+  end_time: string;
+
+  highest_bidder_name?: string;
+}
+
 export type ProfileData = {
   name: string;
   email: string;
   address: string;
-  birthdate: Date;
+  birthdate: string;
   role: string;
   created_at: string;
   total_bids: number;
