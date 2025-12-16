@@ -21,11 +21,7 @@ const formatCurrency = (amount: number) => {
 
 // Toolbar configuration for the Append Info box (simplified)
 const quillModules = {
-  toolbar: [
-    ['bold', 'italic', 'underline'],
-    [{ list: 'ordered' }, { list: 'bullet' }],
-    ['clean'],
-  ],
+  toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['clean']],
 };
 
 const ProductPage = () => {
@@ -70,7 +66,7 @@ const ProductPage = () => {
   const handleAppendDescription = async () => {
     // Validation: Strip HTML tags to check if it's truly empty
     const plainText = newDesc.replace(/<[^>]+>/g, '').trim();
-    
+
     if (!plainText) {
       alert('Please enter description content');
       return;
@@ -215,10 +211,10 @@ const ProductPage = () => {
                     <h4 className="text-xs font-bold text-gray-800 mb-2 flex items-center gap-1">
                       <Pencil size={12} /> Append info:
                     </h4>
-                    
+
                     {/* Quill Editor */}
                     <div className="bg-white mb-3">
-                      <ReactQuill 
+                      <ReactQuill
                         theme="snow"
                         value={newDesc}
                         onChange={setNewDesc}
@@ -262,9 +258,9 @@ const ProductPage = () => {
                         </div>
                       )}
 
-                      <div 
-                        className="content-html" 
-                        dangerouslySetInnerHTML={{ __html: item.text }} 
+                      <div
+                        className="content-html"
+                        dangerouslySetInnerHTML={{ __html: item.text }}
                       />
 
                       {idx === 0 && item.date && (
@@ -298,28 +294,36 @@ const ProductPage = () => {
 
         {/* Related Products - Logic Hidden to save space as it was unchanged */}
         {product.relatedProducts && product.relatedProducts.length > 0 && (
-            <div className="mt-16 mb-12">
-               {/* ... (Existing related products code) ... */}
-               {/* I'm omitting the full render here to keep the answer focused, 
+          <div className="mt-16 mb-12">
+            {/* ... (Existing related products code) ... */}
+            {/* I'm omitting the full render here to keep the answer focused, 
                    but in your real file, keep the code you had below ProductQA */}
-               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Other products</h2>
-                {/* ... */}
-               </div>
-               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                  {product.relatedProducts.map((prod) => (
-                    <a href={`/product/${prod.id}`} key={prod.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
-                         {/* ... Product Card Content ... */}
-                         <div className="p-4 flex flex-col flex-1">
-                            <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">{prod.name}</h3>
-                            <div className="mt-auto pt-2">
-                                <span className="text-[#8D0000] font-bold">{formatCurrency(prod.price)} VND</span>
-                            </div>
-                         </div>
-                    </a>
-                  ))}
-               </div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Other products</h2>
+              {/* ... */}
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              {product.relatedProducts.map((prod) => (
+                <a
+                  href={`/product/${prod.id}`}
+                  key={prod.id}
+                  className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full"
+                >
+                  {/* ... Product Card Content ... */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="font-bold text-gray-900 text-sm mb-2 line-clamp-2">
+                      {prod.name}
+                    </h3>
+                    <div className="mt-auto pt-2">
+                      <span className="text-[#8D0000] font-bold">
+                        {formatCurrency(prod.price)} VND
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
