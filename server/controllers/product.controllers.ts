@@ -7,7 +7,6 @@ import { BUCKET_NAME, s3Client } from '../config/s3.ts';
 import { Readable } from 'stream'; // <--- 1. Import cái này
 import { Prisma } from '@prisma/client';
 
-// import nodemailer from 'nodemailer';
 import * as mailService from '../services/mail.service.ts';
 
 export const uploadProducts = async (req: Request, res: Response) => {
@@ -621,19 +620,8 @@ export const createProductQA = async (req: Request, res: Response) => {
 
     // send email to seller
     const productLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/product/${id}`;
+    mailService.sendNewQuestionEmail(product.seller.email, product.name, question, productLink);
 
-    await mailService.sendCustomEmail({
-      to: product.seller.email,
-      subject: `New Question: ${product.name}`,
-      html: `
-        <h3>Hello ${product.seller.name},</h3>
-        <p>User <strong>${user.name}</strong> asked a question about your product (${product.name}):</p>
-        <div style="background:#f3f4f6; padding:15px; border-left:4px solid #8D0000;">
-          "${question}"
-        </div>
-        <p><a href="${productLink}">Reply Now</a></p>
-      `,
-    });
     return res.status(201).json({ message: 'Question sent successfully!' });
   } catch (error) {
     console.error(error);
@@ -655,7 +643,6 @@ export const replyProductQA = async (req: Request, res: Response) => {
       where: { qa_id: BigInt(qaId) },
       include: {
         product: true,
-        questioner: { select: { email: true, name: true } }, // <--- questioner info for emailing
       },
     });
 
@@ -676,22 +663,41 @@ export const replyProductQA = async (req: Request, res: Response) => {
       },
     });
 
-    // send email to questioner
-    const productLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/product/${qa.product_id}`;
-
-    await mailService.sendCustomEmail({
-      to: qa.questioner.email,
-      subject: `Answer for ${qa.product.name}`,
-      html: `
-        <h3>Hello ${qa.questioner.name},</h3>
-        <p>Seller <strong>${user.name}</strong> answered your question about product ${qa.product.name}:</p>
-        <div style="background:#f3f4f6; padding:15px; border-left:4px solid #8D0000;">
-          <p><strong>You asked:</strong> "${qa.question_text}"</p>
-          <p><strong>Answer:</strong> "${answer}"</p
-        </div>
-        <p><a href="${productLink}">Reply Now</a></p>
-      `,
+    // Send email
+    const productData = await db.prisma.product.findUnique({
+      where: { product_id: qa.product_id },
+      include: {
+        bids: {
+          select: { bidder: { select: { email: true } } },
+        },
+        q_and_a: {
+          select: { questioner: { select: { email: true } } },
+        },
+      },
     });
+
+    if (productData) {
+      // Lay danh sach nguoi da hoi va da dat
+      const questionerList = new Set<string>();
+      productData.q_and_a.forEach((q) => questionerList.add(q.questioner.email));
+      productData.bids.forEach((b) => questionerList.add(b.bidder.email));
+
+      questionerList.delete(user.email);
+
+      const recipients = Array.from(questionerList);
+      const productLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/product/${qa.product_id.toString()}`;
+
+      if (recipients.length > 0) {
+        mailService.sendNewAnswerEmail(
+          recipients,
+          qa.product.name,
+          qa.question_text,
+          answer,
+          productLink
+        );
+      }
+    }
+
     return res.status(201).json({ message: 'Answer sent successfully!' });
   } catch (error) {
     console.error(error);
