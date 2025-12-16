@@ -28,9 +28,9 @@ export const calculateTimeRemaining = (endTimeStr: string | null | undefined): s
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (days >= 3) {
-    return endDate.toLocaleDateString('vi-VN', {
+    return endDate.toLocaleDateString('en-US', {
+      month: 'short',
       day: '2-digit',
-      month: '2-digit',
       year: 'numeric',
     });
   }
