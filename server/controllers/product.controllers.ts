@@ -239,7 +239,7 @@ export const getProduct = async (req: Request, res: Response) => {
     const productData = await db.prisma.product.findUnique({
       where: { product_id: BigInt(id) },
       include: {
-        seller: { select: { user_id: true, name: true, plus_review: true, minus_review: true } },
+        seller: { select: { user_id: true, name: true, plus_review: true, minus_review: true } }, // seller info
         category: true,
         current_highest_bidder: { select: { name: true, plus_review: true, minus_review: true } },
         images: true,
@@ -307,15 +307,16 @@ export const getProduct = async (req: Request, res: Response) => {
       const timeLeft = days > 0 ? `${days} day${days > 1 ? 's' : ''} left` : `${hours}h left`;
 
       return {
+        // follow the "MemoProductCard" structure
         id: p.product_id.toString(),
         name: p.name,
-        price: Number(p.current_price) > 0 ? Number(p.current_price) : Number(p.start_price),
-        buyNowPrice: p.buy_now_price ? Number(p.buy_now_price) : null,
-        bidCount: p.bid_count,
-        postedDate: new Date(p.created_at).toLocaleDateString('en-GB'),
-        timeLeft: timeLeft,
-        bidderName: p.current_highest_bidder?.name || 'No Bids Yet',
-        image: p.images[0]?.image_url || null,
+        bid_count: p.bid_count,
+        current_price: p.current_price.toString(),
+        buy_now_price: p.buy_now_price ? p.buy_now_price.toString() : null,
+        end_time: p.end_time,
+        created_at: p.created_at,
+        highest_bidder_name: p.current_highest_bidder?.name || null,
+        image_url: p.images[0]?.image_url || null,
       };
     });
 
@@ -389,7 +390,7 @@ export const getProduct = async (req: Request, res: Response) => {
         responder: qa.answer_text ? `${productData.seller.name} (Seller)` : null,
         time: new Date(qa.question_time).toLocaleDateString(),
       })),
-      
+
       // Flags
       isSeller: user ? user.id === productData.seller.user_id : false,
       isWatchlisted: isWatchlisted, // NEW FIELD
@@ -434,10 +435,10 @@ export const getProductsLV = async (req: Request, res: Response) => {
     if (level1 && level1 !== '*') {
       whereClause.category = {
         name_level_1: String(level1),
-        ...(level2 && level2 !== '*' ? { name_level_2: String(level2) } : {})
+        ...(level2 && level2 !== '*' ? { name_level_2: String(level2) } : {}),
       };
     }
-    
+
     let orderByClause: any = {};
     const sortField: SortField =
       sortQuery && ['end_time', 'current_price'].includes(sortQuery) ? sortQuery : 'end_time';
