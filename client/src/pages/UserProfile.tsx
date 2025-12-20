@@ -5,6 +5,7 @@ import { useUser } from '../UserContext'
 import { ProfileData } from "../components/user-profile/types"
 import UserAction from "../components/user-profile/user-profile"
 import { Link } from "react-router-dom"
+import { ClipLoader } from "react-spinners"
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -51,7 +52,11 @@ export default function UserProfile() {
     fetchProfile();
   }, [user, navigate])
 
-  if (loading) return <div className="text-center py-32">Loading...</div>;
+  if (loading) return(
+    <div className="min-h-[50vh] w-full flex flex-col justify-center items-center"> 
+      <ClipLoader size={50} color="#8D0000"/>
+    </div>
+  )
   if (!profile) return <div className="text-center py-32 text-red-500">Error</div>;
 
   return (

@@ -38,7 +38,7 @@ export const getAddressParts = (fullAddress?: string | null) => {
 
 function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: SetAction} ) {
 
-const formatDateForInput = (dateInput?: string | Date | null) => {
+  const formatDateForInput = (dateInput?: string | Date | null) => {
     if (!dateInput) return "";
 
     // Trường hợp 1: Nếu là chuỗi dạng "d/m/y" (VD: "7/5/2005" hoặc "13/05/2005")
@@ -138,6 +138,7 @@ const formatDateForInput = (dateInput?: string | Date | null) => {
       profile.email = data.email
       profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`
       profile.birthdate = data.birthdate? data.birthdate:""
+      alert("Edited profile successfully!")
     }
   }
 
@@ -421,7 +422,7 @@ function ChangePassword( {profile, setAction} : {profile: ProfileData, setAction
           console.log("Fail full!!!")
           setError(result.message)
         } else {
-          console.log("Success full!!!")
+          alert("Changed password successfully!")
           setError(null);
           setAction("view-tabs")
         }

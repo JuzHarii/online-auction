@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CategoryContext, useUser } from './UserContext.tsx';
 import CategoryDetail from './CategoryMenu.tsx';
 import { useEffect, useState } from 'react';
+import { Bell, BellDot, BellIcon, CircleUserRound } from 'lucide-react';
 
 function Layout() {
   const { user, setUser } = useUser();
@@ -122,7 +123,9 @@ function Layout() {
                 </>
               ) : (
                 <>
-                  <li className="bg-[#8D0000] text-white px-3 py-1 rounded text-sm hidden sm:block">
+                  <li className=''><Bell/></li>
+                  <li className=''><Link to={"/profile"}><CircleUserRound/></Link></li>
+                  <li className="flex flex-row bg-[#8D0000] text-white px-3 py-1 rounded text-sm hidden sm:block">
                     Welcome, {user.name}
                   </li>
                   <li
