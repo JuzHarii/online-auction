@@ -17,6 +17,7 @@ import {
   updateCategory,
 } from '../controllers/admin.controler.ts';
 import * as userControllers from '../controllers/user.controllers.ts';
+import { UserControllers } from '../controllers/user.controllers.ts';
 import {
   getProduct,
   getProductsEndest,
@@ -165,6 +166,7 @@ router.delete('/seller-list/:product_id', authController.getAuthentication, user
 router.post('/profile/role', authController.getAuthentication, userControllers.requestRole);
 
 router.get('/profile/seller/products', authController.getSellerAuthentication, userControllers.getSellerProducts)
+router.get('profile/seller/productswinner', authController.getSellerAuthentication, UserControllers.SellerControllers.getProductsWithWinner)
 
 // ===============================
 

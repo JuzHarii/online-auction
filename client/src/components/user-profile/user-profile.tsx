@@ -42,16 +42,10 @@ export const getAddressParts = (fullAddress?: string | null) => {
   };
 };
 
-<<<<<<< HEAD
 function EditProfile( {profile, setAction} : {profile: ProfileData, setAction: SetAction} ) {
 
   const formatDateForInput = (dateInput?: string | Date | null) => {
     if (!dateInput) return "";
-=======
-function EditProfile({ profile, setAction }: { profile: ProfileData; setAction: SetAction }) {
-  const formatDateForInput = (dateInput?: string | Date | null) => {
-    if (!dateInput) return '';
->>>>>>> 6b763a05d73a292c1257e29ac869d0bdc64813ad
 
     // Trường hợp 1: Nếu là chuỗi dạng "d/m/y" (VD: "7/5/2005" hoặc "13/05/2005")
     if (typeof dateInput === 'string' && dateInput.includes('/')) {
@@ -144,18 +138,11 @@ function EditProfile({ profile, setAction }: { profile: ProfileData; setAction: 
       console.error('[v0] Update error:', err);
     } finally {
       setLoading(false);
-<<<<<<< HEAD
       profile.name = data.name
       profile.email = data.email
       profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`
       profile.birthdate = data.birthdate? data.birthdate:""
       alert("Edited profile successfully!")
-=======
-      profile.name = data.name;
-      profile.email = data.email;
-      profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
-      profile.birthdate = data.birthdate ? data.birthdate : '';
->>>>>>> 6b763a05d73a292c1257e29ac869d0bdc64813ad
     }
   };
 
@@ -465,7 +452,6 @@ function ChangePassword({ profile, setAction }: { profile: ProfileData; setActio
       setLoading(false);
       const result = await res.json();
 
-<<<<<<< HEAD
         if (!result.isSuccess) {
           console.log("Fail full!!!")
           setError(result.message)
@@ -477,18 +463,6 @@ function ChangePassword({ profile, setAction }: { profile: ProfileData; setActio
 
     } catch(e) {
         console.error(e)
-=======
-      if (!result.isSuccess) {
-        console.log('Fail full!!!');
-        setError(result.message);
-      } else {
-        console.log('Success full!!!');
-        setError(null);
-        setAction('view-tabs');
-      }
-    } catch (e) {
-      console.error(e);
->>>>>>> 6b763a05d73a292c1257e29ac869d0bdc64813ad
     }
   };
 

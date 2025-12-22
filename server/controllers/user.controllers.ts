@@ -2,8 +2,98 @@ import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from '@prisma/client';
 import { ProductStatus, OrderStatus } from "@prisma/client";
 import { errorResponse, successResponse } from "../utils/response";
+import { UserServices } from "../services/user.services";
 
 const prisma = new PrismaClient();
+
+export type Profile = {
+  name: string;
+  email: string;
+  address: string;
+  birthdate: string;
+  role: string;
+  created_at: string;
+  total_bids: number;
+  bids_this_week: number;
+  total_wins: number;
+  win_rate: number;
+  watchlist_count: number;
+  rating: number;
+  rating_label: string;
+};
+
+export interface TabContent {
+  /* ===== PRODUCT CORE ===== */
+  product_id: number;
+  name: string;
+  status?: ProductStatus;
+
+  current_price?: number;
+  buy_now_price?: number;
+
+  bid_count?: number;
+  end_time?: string;
+
+  auto_extend?: boolean;
+  review_needed?: boolean;
+
+  seller?: {
+    user_id: string;
+    name: string;
+  }
+
+  category: {
+    category_id: number;
+    category_name_level_1: string;
+    category_name_level_2?: string | null;
+  }
+
+  current_highest_bidder?: {
+    user_id?: string;
+    name?: string;
+  },
+
+  image_url: string;
+  bid_time?: string;
+  q_and_a_count?: number;
+  reviews_count?: number;
+
+  order?: {
+    order_id: number;
+    final_price?: number;
+    status?: OrderStatus;
+
+    created_at: string;
+    updated_at: string;
+
+    buyer?: {
+      user_id?: string;
+      name?: string;
+    },
+  }
+
+  buyer_review?: {
+    review_id: number;
+
+    reviewer_id?: string;
+    reviewer_name?: string;
+
+    is_positive?: boolean;
+    comment?: string | null;
+    created_at?: string;
+  };
+
+  seller_review?: {
+    review_id: number;
+
+    reviewer_id?: string;
+    reviewer_name?: string;
+
+    is_positive?: boolean;
+    comment?: string | null;
+    created_at?: string;
+  }
+};
 
 type BiddingProduct = {
   product_id: number,
@@ -520,5 +610,324 @@ export const requestRole = async (req: Request, res: Response) => {
     return res.json(successResponse(null, result.message? result.message : "Success"))
   } catch (error) {
     return res.status(500).json(errorResponse(String(error)));
+  }
+}
+
+export const UserControllers = {
+  BidderControllers: {
+    getBiddingProducts: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        const products = await UserServices.BidderServices.getBiddingProducts(user_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product.product_id),
+          name: product.product.name,
+          status: product.product.status,
+
+          current_price: Number(product.product.current_price),
+          buy_now_price: Number(product.product.buy_now_price),
+
+          bid_count: product.product.bid_count,
+          end_time: new Date(product.product.end_time).toLocaleDateString(),
+
+          seller: {
+            user_id: product.product.seller.user_id,
+            name: product.product.seller.name
+          },
+
+          category: {
+            category_id: product.product.category.category_id,
+            category_name_level_1: product.product.category.name_level_1,
+            category_name_level_2: product.product.category.name_level_2
+          },
+
+
+          current_highest_bidder: {
+            user_id: product.product.current_highest_bidder?.user_id,
+            name: product.product.current_highest_bidder?.name
+          },
+
+          image_url: product.product.images[0].image_url,
+          bid_time: new Date(product.bid_time).toLocaleDateString(),
+          reviews_count: product.product._count.reviews
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get bidding products successfullly"
+              : "No bidding product"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    },
+    getWonProducts: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        const products = await UserServices.BidderServices.getWonProducts(user_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product.product_id),
+          name: product.product.name,
+
+          bid_count: product.product.bid_count,
+          end_time: new Date(product.product.end_time).toLocaleDateString(),
+
+          review_needed: product.product.review_needed,
+
+          seller: {
+            user_id: product.product.seller.user_id,
+            name: product.product.seller.name
+          },
+
+          category: {
+            category_id: product.product.category.category_id,
+            category_name_level_1: product.product.category.name_level_1,
+            category_name_level_2: product.product.category.name_level_2
+          },
+
+
+          image_url: product.product.images[0].image_url,
+          reviews_count: product.product._count.reviews,
+
+          order: {
+            order_id: Number(product.order_id),
+            final_price: Number(product.final_price),
+            status: product.status,
+
+            created_at: new Date(product.created_at).toLocaleDateString(),
+            updated_at: new Date(product.updated_at).toLocaleDateString()
+          }
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get won products successfullly"
+              : "No won product"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    },
+    getWatchlistProducts: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        const products = await UserServices.BidderServices.getWatchlistProducts(user_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product.product_id),
+          name: product.product.name,
+          status: product.product.status,
+
+          current_price: Number(product.product.current_price),
+          buy_now_price: Number(product.product.buy_now_price),
+
+          bid_count: product.product.bid_count,
+          end_time: new Date(product.product.end_time).toLocaleDateString(),
+
+          seller: {
+            user_id: product.product.seller.user_id,
+            name: product.product.seller.name
+          },
+
+          category: {
+            category_id: product.product.category.category_id,
+            category_name_level_1: product.product.category.name_level_1,
+            category_name_level_2: product.product.category.name_level_2
+          },
+
+          current_highest_bidder: {
+            user_id: product.product.current_highest_bidder?.user_id,
+            name: product.product.current_highest_bidder?.name
+          },
+
+          image_url: product.product.images[0].image_url,
+          reviews_count: product.product._count.reviews
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get bidding products successfullly"
+              : "No bidding product"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    },
+    getRatingsFromBuyers: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        const products = await UserServices.BidderServices.getRatingsFromBuyers(user_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product.product_id),
+          name: product.product.name,
+
+          category: {
+            category_id: product.product.category.category_id,
+            category_name_level_1: product.product.category.name_level_1,
+            category_name_level_2: product.product.category.name_level_2
+          },
+
+          image_url: product.product.images[0].image_url,
+
+          buyer_review: {
+            review_id: Number(product.review_id),
+            reviewer_id: product.reviewer.user_id,
+            reviewer_name: product.reviewer.name,
+            is_positive: product.is_positive,
+            comment: product.comment,
+            created_at: new Date(product.created_at).toLocaleDateString()
+          }
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get bidding products successfullly"
+              : "No bidding product"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    },
+    getRatingsFromSellers: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        const products = await UserServices.BidderServices.getRatingsFromSellers(user_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product.product_id),
+          name: product.product.name,
+
+          category: {
+            category_id: product.product.category.category_id,
+            category_name_level_1: product.product.category.name_level_1,
+            category_name_level_2: product.product.category.name_level_2
+          },
+
+          image_url: product.product.images[0].image_url,
+
+          buyer_review: {
+            review_id: Number(product.review_id),
+            reviewer_id: product.reviewer.user_id,
+            reviewer_name: product.reviewer.name,
+            is_positive: product.is_positive,
+            comment: product.comment,
+            created_at: new Date(product.created_at).toLocaleDateString()
+          }
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get bidding products successfullly"
+              : "No bidding product"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    }
+  },
+
+  SellerControllers: {
+    getProductsWithWinner: async (req: Request, res: Response) => {
+      try {
+        const seller_id = res.locals.user.id;
+        if (!seller_id) return res.status(401).json(errorResponse("Unauthorized"));
+
+        if (res.locals.user.role !== 'seller')
+          return res.status(403).json(errorResponse('Forbidden'));
+
+        const products = await UserServices.SellerServices.getProductsWithWinner(seller_id);
+
+        const payload: TabContent[] = products.map((product) => ({
+          product_id: Number(product.product_id),
+          name: product.name,
+
+          bid_count: product.bid_count,
+          end_time: new Date(product.end_time).toLocaleDateString(),
+
+          review_needed: product.review_needed,
+
+          image_url: product.images[0].image_url,
+          category: {
+            category_id: product.category.category_id,
+            category_name_level_1: product.category.name_level_1,
+            category_name_level_2: product.category.name_level_2
+          },
+
+          reviews_count: product._count.reviews,
+
+          order: {
+            order_id: Number(product.order?.order_id),
+            final_price: Number(product.order?.final_price),
+            status: product.order?.status,
+            created_at: new Date(product.order?.created_at|| Date.now()).toLocaleDateString(),
+            updated_at: new Date(product.order?.updated_at||Date.now()).toLocaleDateString(),
+
+            buyer: {
+              user_id: product.order?.buyer.user_id,
+              name: product.order?.buyer.name,
+            }
+          },
+          buyer_review: {
+            review_id: Number(product.order?.buyer_review?.review_id),
+            reviewer_id: product.order?.buyer.user_id,
+            reviewer_name: product.order?.buyer.name,
+            is_positive: product.order?.buyer_review?.is_positive,
+            comment: product.order?.buyer_review?.comment,
+            created_at: new Date(product.order?.buyer_review?.created_at|| Date.now()).toLocaleDateString()
+          }
+        }))
+
+        return res.status(200).json(
+          successResponse(
+            payload,  
+            payload.length 
+              ? "Get products with winner successfullly"
+              : "No products with winner"
+          )
+        );
+
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse("Internal server error"));
+      }
+    }
   }
 }
