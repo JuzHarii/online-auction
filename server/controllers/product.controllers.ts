@@ -229,7 +229,7 @@ const bigIntReplacer = (key: string, value: any) => {
 const calculateRating = (plus: number, minus: number) => {
   const total = plus + minus;
   if (total === 0) return 0;
-  return Number(((plus / total) * 5).toFixed(1));
+  return Number(((plus / total) * 10).toFixed(1));
 };
 
 export const getProduct = async (req: Request, res: Response) => {
