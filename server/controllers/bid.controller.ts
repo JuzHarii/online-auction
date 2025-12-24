@@ -72,22 +72,110 @@ export const banBidder = async (req: Request, res: Response) => {
     if (!productId || !bidderId) {
       return res.status(400).json({ message: 'Product ID and Bidder ID are required.' });
     }
-    const deniedBidder = await db.prisma.deniedBidders.create({
-      data: {
-        product_id: BigInt(productId),
-        bidder_id: bidderId,
-      },
+
+    const prodIdBigInt = BigInt(productId);
+
+    const result = await db.prisma.$transaction(async (tx) => {
+      // 1. Trigger Database sẽ chạy ngay khi dòng này được thực thi
+      // Trigger sẽ làm nhiệm vụ: XÓA BID HISTORY của user này.
+      // (Ta không cần gọi lệnh deleteMany trong code nữa)
+      const deniedBidder = await tx.deniedBidders.create({
+        data: {
+          product_id: prodIdBigInt,
+          bidder_id: bidderId,
+        },
+      });
+
+      // 2. Lấy thông tin sản phẩm (Start Price, Step Price)
+      const product = await tx.product.findUnique({
+        where: { product_id: prodIdBigInt },
+      });
+
+      if (!product) throw new Error('Product not found');
+
+      // 3. Lấy danh sách bid còn lại (Dữ liệu lúc này ĐÃ SẠCH vì trigger đã chạy xong)
+      const remainingBids = await tx.bidHistory.findMany({
+        where: { product_id: prodIdBigInt },
+        orderBy: [
+          { bid_amount: 'desc' }, 
+          { bid_time: 'asc' },   
+        ],
+        take: 2, 
+      });
+
+      // 4. Tính toán lại giá (Logic Proxy Bidding)
+      // Phần này sẽ "sửa sai" cho trigger nếu trigger tính giá không chuẩn
+      let newCurrentPrice = Number(product.start_price);
+      let newHighestBidderId = null;
+      const stepPrice = Number(product.step_price);
+
+      if (remainingBids.length === 0) {
+        // Hết người bid -> Về giá khởi điểm
+        newCurrentPrice = Number(product.start_price);
+        newHighestBidderId = null;
+      } else if (remainingBids.length === 1) {
+        // Còn 1 người -> Về giá khởi điểm (hoặc giữ nguyên bid của họ tùy luật)
+        // Thông thường nếu không còn đối thủ, giá sẽ là Start Price
+        newHighestBidderId = remainingBids[0].bidder_id;
+        newCurrentPrice = Number(product.start_price); 
+      } else {
+        // Còn >= 2 người -> Logic Proxy: Giá nhì + Step
+        const winnerMaxBid = Number(remainingBids[0].bid_amount);
+        const secondMaxBid = Number(remainingBids[1].bid_amount);
+        
+        newHighestBidderId = remainingBids[0].bidder_id;
+        
+        // Công thức: Giá người thứ 2 + Bước giá
+        let calculatedPrice = secondMaxBid + stepPrice;
+
+        // Giá sàn không được vượt quá giá trần của người thắng
+        if (calculatedPrice > winnerMaxBid) {
+          calculatedPrice = winnerMaxBid;
+        }
+
+        newCurrentPrice = calculatedPrice;
+      }
+
+      // 5. Đếm lại số bid thực tế
+      const newBidCount = await tx.bidHistory.count({
+        where: { product_id: prodIdBigInt },
+      });
+
+      // 6. CẬP NHẬT LẠI PRODUCT (Ghi đè lên kết quả của Trigger)
+      const updatedProduct = await tx.product.update({
+        where: { product_id: prodIdBigInt },
+        data: {
+          current_price: newCurrentPrice,
+          current_highest_bidder_id: newHighestBidderId,
+          bid_count: newBidCount,
+        },
+      });
+
+      return { deniedBidder, updatedProduct };
     });
 
     return res.status(200).json({
-      message: 'User banned successfully.',
+      message: 'User banned and auction state recalculated successfully.',
       data: {
-        ...deniedBidder,
-        product_id: deniedBidder.product_id.toString(),
+        bannedUser: {
+            ...result.deniedBidder,
+            // CHUYỂN ĐỔI Ở ĐÂY:
+            product_id: result.deniedBidder.product_id.toString(), 
+        },
+        newProductState: {
+            current_price: result.updatedProduct.current_price,
+            current_highest_bidder_id: result.updatedProduct.current_highest_bidder_id,
+            bid_count: result.updatedProduct.bid_count
+        }
       },
     });
-  } catch (error) {
-    return res.status(500).json({ message: 'Internal server error.' });
+  } catch (error: any) {
+    console.error("Ban Bidder Error: ", error);
+    // Bắt lỗi trigger trả về (ví dụ nếu trigger lỗi)
+    if (error.code === 'P2010' || error.message.includes('trigger')) { 
+        return res.status(500).json({ message: 'Database trigger failed.', error: error.message });
+    }
+    return res.status(500).json({ message: 'Internal server error.', error: error.message });
   }
 };
 
