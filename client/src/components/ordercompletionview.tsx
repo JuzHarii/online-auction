@@ -202,17 +202,18 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
       // 5. Clear Inputs AND Previews (Fix applied here)
       if (status === 'payment_confirmed') {
         setPaymentInvoice(null);
-        setPaymentInvoicePreview(null); 
+        // setPaymentInvoicePreview(null); 
       }
       if (status === 'shipped') {
         setShippingInvoice(null);
-        setShippingInvoicePreview(null);
+        // setShippingInvoicePreview(null);
       }
 
     } catch (e) {
       console.error(e);
       alert('An error occurred while updating the order.');
     }
+    // window.location.reload();
   };
 
   const handleSubmitReview = async () => {
@@ -367,7 +368,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                        value={shippingAddress}
                        onChange={(e) => setShippingAddress(e.target.value)}
                      />
- 
                      {!paymentInvoicePreview && (
                        <div
                          onDragOver={(e) => {
@@ -448,7 +448,18 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                      </button>
                    </div>
                  )}
- 
+  
+                  {step.number === 1 && order.payment_proof_url && (
+                    <img  className="mt-2 h-32 object-contain border rounded" src={`/api/assets/${order.payment_proof_url}`} alt="" />
+                  )}
+
+                  {step.number === 1 && (order.payment_proof_url === null) && (paymentInvoicePreview) &&  order.status !== "pending_payment" && (
+                    <img
+                      src={paymentInvoicePreview}
+                      className="mt-2 h-32 object-contain border rounded"
+                    />
+                  )}
+                  
                  {/* STEP 2: Seller confirm + shipping invoice */}
                  {step.number === 2 && order.is_seller && order.status === 'payment_confirmed' && (
                    <div className="space-y-3">
@@ -533,6 +544,17 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                      </button>
                    </div>
                  )}
+
+                  {step.number === 2 && order.shipping_proof_url && (
+                    <img  className="mt-2 h-32 object-contain border rounded" src={`/api/assets/${order.shipping_proof_url}`} alt="" />
+                  )}
+
+                  {step.number === 2 && (shippingInvoicePreview) &&  order.status !== "payment_confirmed" && (
+                      <img
+                        src={shippingInvoicePreview}
+                        className="mt-2 h-32 object-contain border rounded"
+                      />
+                  )}
  
                  {/* STEP 3: Buyer confirms received */}
                  {step.number === 3 && isBuyer && order.status === 'shipped' && (
