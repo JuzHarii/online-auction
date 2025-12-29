@@ -35,6 +35,7 @@ import {
   changeOrder,
   getChat,
   getOrder,
+  getOrderImage,
 } from '../controllers/payment.controller.ts';
 
 const router = express.Router();
@@ -229,6 +230,8 @@ router.get('/payment/:orderid', authController.getAuthentication, getOrder);
 router.put('/payment/:orderid', authController.getAuthentication, changeOrder);
 
 router.post('/payment-review/:orderid', authController.getAuthentication, addReview);
+
+router.get('/assets/orders/:key', getOrderImage);
 
 router.post('/chat/:orderid', authController.getAuthentication, addChat);
 
