@@ -29,7 +29,13 @@ import {
   appendProductDescription,
 } from '../controllers/product.controllers.ts';
 import { banBidder, getBidHistory, placeBid } from '../controllers/bid.controller.ts';
-import { addChat, addReview, changeOrder, getChat, getOrder } from '../controllers/payment.controller.ts';
+import {
+  addChat,
+  addReview,
+  changeOrder,
+  getChat,
+  getOrder,
+} from '../controllers/payment.controller.ts';
 
 const router = express.Router();
 
@@ -186,6 +192,11 @@ router.delete(
 );
 
 router.post('/profile/role', authController.getAuthentication, userControllers.requestRole);
+router.get(
+  '/profile/seller-status',
+  authController.getAuthentication,
+  userControllers.getSellerStatus
+);
 
 router.get(
   '/profile/seller/products',
@@ -211,38 +222,16 @@ router.post(
   appendProductDescription
 );
 
-
-//============================ 
+//============================
 // Payment
-router.get(
-  '/payment/:orderid',
-  authController.getAuthentication,
-  getOrder
-)
+router.get('/payment/:orderid', authController.getAuthentication, getOrder);
 
-router.put(
-  '/payment/:orderid',
-  authController.getAuthentication,
-  changeOrder
-)
+router.put('/payment/:orderid', authController.getAuthentication, changeOrder);
 
-router.post(
-  '/payment-review/:orderid',
-  authController.getAuthentication,
-  addReview
-)
+router.post('/payment-review/:orderid', authController.getAuthentication, addReview);
 
-router.post(
-  '/chat/:orderid',
-  authController.getAuthentication,
-  addChat
-)
+router.post('/chat/:orderid', authController.getAuthentication, addChat);
 
-
-router.get(
-  '/chat/:orderid',
-  authController.getAuthentication,
-  getChat
-)
+router.get('/chat/:orderid', authController.getAuthentication, getChat);
 
 export default router;

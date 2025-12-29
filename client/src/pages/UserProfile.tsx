@@ -7,6 +7,7 @@ import { useUser } from '../UserContext';
 import { ProfileData } from '../components/user-profile/types';
 import UserAction from '../components/user-profile/user-profile';
 import { Link } from 'react-router-dom';
+import { SellerStatus } from '../components/user-profile/seller-status';
 
 export default function UserProfile() {
   const navigate = useNavigate();
@@ -111,6 +112,13 @@ export default function UserProfile() {
           </div>
 
           <div className="flex flex-col gap-3 my-10">
+            {/* Seller Status Display */}
+            {profile.role === 'seller' && (
+              <div className="mb-3">
+                <SellerStatus />
+              </div>
+            )}
+
             <button
               onClick={() => setAction('edit-profile')}
               className="

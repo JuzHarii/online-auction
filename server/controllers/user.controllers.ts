@@ -468,9 +468,13 @@ export const requestRole = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized: Can't find user" });
     }
 
-    const { message } = req.body as {
+    const { message, request_type } = req.body as {
       message: string;
+      request_type?: string;
     };
+
+    // Validate request_type
+    const validRequestType = request_type === 'temporary' ? 'temporary' : 'permanent';
 
     const existingRequest = await prisma.sellerUpgradeRequest.findUnique({
       where: { user_id: user_id },
@@ -494,6 +498,7 @@ export const requestRole = async (req: Request, res: Response) => {
         where: { user_id: user_id },
         data: {
           message: message,
+          request_type: validRequestType,
           is_denied: false, // Reset trạng thái từ chối
           is_approved: false, // Đảm bảo chưa duyệt
           requested_at: new Date(), // Cập nhật lại thời gian gửi
@@ -512,10 +517,101 @@ export const requestRole = async (req: Request, res: Response) => {
       data: {
         user_id: user_id,
         message: message,
+        request_type: validRequestType,
       },
     });
 
     return res.json(successResponse(null, result.message ? result.message : 'Success'));
+  } catch (error) {
+    return res.status(500).json(errorResponse(String(error)));
+  }
+};
+
+export const getSellerStatus = async (req: Request, res: Response) => {
+  try {
+    const user_id = res.locals.user.id;
+    if (!user_id) {
+      return res.status(401).json({ message: "Unauthorized: Can't find user" });
+    }
+
+    // Get user role
+    const user = await prisma.user.findUnique({
+      where: { user_id: user_id },
+      select: { role: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If user is a seller, check if they have an expiration date
+    if (user.role === 'seller') {
+      const upgradeRequest = await prisma.sellerUpgradeRequest.findUnique({
+        where: { user_id: user_id },
+        select: {
+          expires_at: true,
+          is_approved: true,
+          request_type: true,
+        },
+      });
+
+      if (upgradeRequest && upgradeRequest.is_approved) {
+        // Temporary seller (has expiration date)
+        if (upgradeRequest.request_type === 'temporary' && upgradeRequest.expires_at) {
+          const now = new Date();
+          const daysRemaining = Math.ceil(
+            (upgradeRequest.expires_at.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+
+          return res.json(
+            successResponse(
+              {
+                role: 'seller',
+                requestType: 'temporary',
+                isTemporary: true,
+                expiresAt: upgradeRequest.expires_at.toISOString(),
+                daysRemaining: Math.max(0, daysRemaining),
+              },
+              'Seller status retrieved'
+            )
+          );
+        }
+
+        // Permanent seller
+        return res.json(
+          successResponse(
+            {
+              role: 'seller',
+              requestType: 'permanent',
+              isTemporary: false,
+            },
+            'Seller status retrieved'
+          )
+        );
+      }
+
+      // Permanent seller (no expiration)
+      return res.json(
+        successResponse(
+          {
+            role: 'seller',
+            isTemporary: false,
+          },
+          'Seller status retrieved'
+        )
+      );
+    }
+
+    // Not a seller
+    return res.json(
+      successResponse(
+        {
+          role: user.role,
+          isTemporary: false,
+        },
+        'User status retrieved'
+      )
+    );
   } catch (error) {
     return res.status(500).json(errorResponse(String(error)));
   }
