@@ -125,52 +125,107 @@ export const sendNewBidEmail = async (
   // Danh sach nguoi can gui email
   const emailPromises = [];
 
-  // 1. gui cho seller biet co nguoi ra gia moi
+  // 1. Send to seller - Notify new bid received
   emailPromises.push(
     sendCustomEmail({
       to: sellerEmail,
-      subject: `New Bid Received: ${productName}`,
+      subject: `🎉 New Bid Received: "${productName}"`,
       html: `
-        <h3>Good news!</h3>
-        <p>A new bid of <strong style="color: #8D0000; font-size: 16px;">${price}</strong> has been placed on your product <strong>${productName}</strong>.</p>
-        <div style="margin-top: 15px;">
-          <a href="${productLink}" style="color: #8D0000; font-weight: bold;">Check your product now &rarr;</a>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #8D0000 0%, #b30000 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h2 style="margin: 0; font-size: 24px;">🎉 Good News!</h2>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">
+              Your product <strong style="color: #8D0000;">${productName}</strong> just received a new bid!
+            </p>
+            <div style="background: #f0f8ff; border-left: 4px solid #8D0000; padding: 20px; margin: 20px 0; border-radius: 5px;">
+              <p style="margin: 0; font-size: 14px; color: #666;">Current Price:</p>
+              <h3 style="margin: 10px 0 0 0; color: #8D0000; font-size: 28px;">${price} VND</h3>
+            </div>
+            <p style="font-size: 14px; color: #666; line-height: 1.6;">
+              The auction is heating up! Continue to monitor your product.
+            </p>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${productLink}" style="display: inline-block; background: #8D0000; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Product Now →</a>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+            <p>ThinkLab Auction System</p>
+          </div>
         </div>
       `,
     })
   );
 
-  // 2. gui cho bidder vua ra gia thanh cong - xac nhan da ra gia thanh cong
+  // 2. Send to bidder - Confirm successful bid
   emailPromises.push(
     sendCustomEmail({
       to: bidderEmail,
-      subject: `Bid Successful: ${productName}`,
+      subject: `✅ Bid Successful: "${productName}"`,
       html: `
-        <h3>You are the highest bidder!</h3>
-        <p>You successfully placed a bid of <strong style="color: #8D0000;">${price}</strong> on <strong>${productName}</strong>.</p>
-        <p>We will notify you if someone outbids you via email.</p>
-        <div style="margin-top: 15px;">
-          <a href="${productLink}" style="color: #8D0000; font-weight: bold;">View Product &rarr;</a>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h2 style="margin: 0; font-size: 24px;">✅ Bid Successful!</h2>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">
+              Congratulations! You are currently the <strong style="color: #4CAF50;">highest bidder</strong> for:
+            </p>
+            <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4CAF50;">
+              <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+              <p style="margin: 0; font-size: 14px; color: #666;">Your Bid:</p>
+              <h3 style="margin: 5px 0 0 0; color: #4CAF50; font-size: 28px;">${price} VND</h3>
+            </div>
+            <div style="background: #fffbea; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffa500;">
+              <p style="margin: 0; font-size: 14px; color: #856404;">
+                ⚠️ <strong>Note:</strong> If someone places a higher bid, we'll notify you via email.
+              </p>
+            </div>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${productLink}" style="display: inline-block; background: #4CAF50; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Track Product →</a>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+            <p>ThinkLab Auction System</p>
+          </div>
         </div>
       `,
     })
   );
 
-  // 3. gui cho old bidder (neu co) rang co nguoi dat gia cao hon va hoi xem co muon ra gia tiep hay khong
+  // 3. Send to previous highest bidder (if any) - Notify they've been outbid
   if (oldBidderEmail && oldBidderEmail !== bidderEmail) {
     emailPromises.push(
       sendCustomEmail({
         to: oldBidderEmail,
-        subject: `⚠️ You have been outbid: ${productName}`,
+        subject: `⚠️ You've Been Outbid: "${productName}"`,
         html: `
-          <h3>Action Required!</h3>
-          <p>Another user has placed a higher bid of <strong>${price}</strong> on <strong>${productName}</strong>.</p>
-          <div style="background:#f3f4f6; padding:15px; border-left:4px solid #8D0000; margin: 15px 0;">
-            <p style="margin:0;">Current Price: <strong>${price}</strong></p>
-          </div>
-          <p>Place a new bid now to reclaim your position!</p>
-          <div style="margin-top: 20px;">
-            <a href="${productLink}" style="background: #8D0000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Bid Again Now</a>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+            <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+              <h2 style="margin: 0; font-size: 24px;">⚠️ Action Required!</h2>
+            </div>
+            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+              <p style="font-size: 16px; color: #333; line-height: 1.6;">
+                Someone just placed a higher bid than yours on:
+              </p>
+              <div style="background: #fff5f5; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ff6b6b;">
+                <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+                <p style="margin: 0; font-size: 14px; color: #666;">Current Price:</p>
+                <h3 style="margin: 5px 0 0 0; color: #ff6b6b; font-size: 28px;">${price} VND</h3>
+              </div>
+              <div style="background: #e8f5e9; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                <p style="margin: 0; font-size: 14px; color: #2e7d32;">
+                  💡 <strong>Don't miss out!</strong> Place a new bid now to reclaim your leading position!
+                </p>
+              </div>
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${productLink}" style="display: inline-block; background: #ff6b6b; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Bid Again Now →</a>
+              </div>
+            </div>
+            <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+              <p>ThinkLab Auction System</p>
+            </div>
           </div>
         `,
       })
@@ -187,35 +242,85 @@ export const sendNewBidEmail = async (
   }
 };
 
-// Người mua bị từ chối ra giá
+// Bidder rejected from auction
 export const sendBidRejectedEmail = async (
-  email: string, // Người mua
+  email: string, // Bidder
   productName: string,
   productLink: string
 ) => {
   await sendCustomEmail({
     to: email,
-    subject: `Bid Rejected: ${productName}`,
+    subject: `🚫 You've Been Denied Bidding Access: "${productName}"`,
     html: `
-      <h3>Your bid has been rejected by the seller.</h3>
-      <p>You can no longer participate in this auction.</p>
-      <a href="${productLink}">View Product</a>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0; font-size: 24px;">🚫 Important Notice</h2>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            The seller has denied you access to bid on:
+          </p>
+          <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #6c757d;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+          </div>
+          <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+              ⚠️ <strong>Notice:</strong> You can no longer place bids on this product. All your previous bids have been removed.
+            </p>
+          </div>
+          <p style="font-size: 14px; color: #666; line-height: 1.6;">
+            If you have any questions, please contact the seller or our support team.
+          </p>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${productLink}" style="display: inline-block; background: #6c757d; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Product →</a>
+          </div>
+        </div>
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+          <p>ThinkLab Auction System</p>
+        </div>
+      </div>
     `,
   });
 };
 
-// Đấu giá kết thúc, không có người mua
+// Auction ended without winner
 export const sendAuctionEndedNoWinnerEmail = async (
-  email: string, //
+  email: string, // Seller
   productName: string,
   productLink: string
 ) => {
   await sendCustomEmail({
     to: email,
-    subject: `Auction Ended with no bids: ${productName}`,
+    subject: `📢 Auction Ended with No Bids: "${productName}"`,
     html: `
-      <p>Your auction has ended but received no bids.</p>
-      <a href="${productLink}">View Product</a>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0; font-size: 24px;">📢 Auction Ended</h2>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            Your auction has ended:
+          </p>
+          <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #6c757d;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">Status: <strong>Expired</strong></p>
+          </div>
+          <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+              💡 <strong>Information:</strong> Your product did not receive any bids.
+            </p>
+          </div>
+          <p style="font-size: 14px; color: #666; line-height: 1.6;">
+            You can review the product details or relist this product with a new starting price.
+          </p>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${productLink}" style="display: inline-block; background: #6c757d; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Product →</a>
+          </div>
+        </div>
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+          <p>ThinkLab Auction System</p>
+        </div>
+      </div>
     `,
   });
 };
@@ -230,30 +335,83 @@ export const sendAuctionSuccessEmail = async (
 ) => {
   const promises = [];
 
-  // Gửi Seller
+  // Send to seller
   promises.push(
     sendCustomEmail({
       to: sellerEmail,
-      subject: `🎉 Product Sold: ${productName}`,
+      subject: `🎉 Congratulations! Product Sold: "${productName}"`,
       html: `
-      <h3>Congratulations!</h3>
-      <p>Your product was sold for <strong>${price}</strong>.</p>
-      <p>Please contact the winner to arrange delivery.</p>
-      <a href="${productLink}">View Details</a>
-    `,
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #333; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h2 style="margin: 0; font-size: 28px;">🎉 Congratulations!</h2>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Your product has been sold successfully</p>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">
+              Your auction has ended successfully!
+            </p>
+            <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #FFD700;">
+              <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+              <p style="margin: 0; font-size: 14px; color: #666;">Final Price:</p>
+              <h3 style="margin: 5px 0 0 0; color: #FFA500; font-size: 28px;">${price} VND</h3>
+            </div>
+            <div style="background: #e8f5e9; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4CAF50;">
+              <p style="margin: 0; font-size: 14px; color: #2e7d32;">
+                ✅ <strong>Next Step:</strong> Please contact the buyer to arrange delivery and complete the transaction.
+              </p>
+            </div>
+            <p style="font-size: 14px; color: #666; line-height: 1.6;">
+              You can view order details and communicate with the buyer in your order management page.
+            </p>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${productLink}" style="display: inline-block; background: #FFA500; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Order Details →</a>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+            <p>ThinkLab Auction System</p>
+          </div>
+        </div>
+      `,
     })
   );
 
-  // Gửi Winner
+  // Send to winner
   promises.push(
     sendCustomEmail({
       to: winnerEmail,
-      subject: `🏆 You Won: ${productName}`,
+      subject: `🏆 Congratulations! You Won: "${productName}"`,
       html: `
-      <h3>Congratulations!</h3>
-      <p>You won the auction with a bid of <strong>${price}</strong>.</p>
-      <a href="${productLink}">Pay Now</a>
-    `,
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h2 style="margin: 0; font-size: 28px;">🏆 Congratulations!</h2>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">You won the auction</p>
+          </div>
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px; color: #333; line-height: 1.6;">
+              Congratulations! You won the auction for:
+            </p>
+            <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4CAF50;">
+              <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+              <p style="margin: 0; font-size: 14px; color: #666;">Winning Bid:</p>
+              <h3 style="margin: 5px 0 0 0; color: #4CAF50; font-size: 28px;">${price} VND</h3>
+            </div>
+            <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107;">
+              <p style="margin: 0; font-size: 14px; color: #856404;">
+                ⚠️ <strong>Important:</strong> Please make payment and contact the seller within 48 hours to complete the transaction.
+              </p>
+            </div>
+            <p style="font-size: 14px; color: #666; line-height: 1.6;">
+              You can view order details, make payment, and communicate with the seller in your order management page.
+            </p>
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${productLink}" style="display: inline-block; background: #4CAF50; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Pay Now →</a>
+            </div>
+          </div>
+          <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+            <p>ThinkLab Auction System</p>
+          </div>
+        </div>
+      `,
     })
   );
 
@@ -268,12 +426,35 @@ export const sendNewQuestionEmail = async (
 ) => {
   await sendCustomEmail({
     to: sellerEmail,
-    subject: `New Question on: ${productName}`,
+    subject: `💬 New Question on Your Product: "${productName}"`,
     html: `
-      <h3>You received a new question</h3>
-      <p><strong>There is a new question about your product (${productName}):</strong> "${question}"</p>
-      <div style="margin-top: 15px;">
-        <a href="${productLink}" style="background: #8D0000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reply Now</a>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0; font-size: 24px;">💬 New Question Received</h2>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            You received a new question about your product:
+          </p>
+          <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #007bff;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+          </div>
+          <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #8D0000;">
+            <p style="margin: 0; font-size: 14px; color: #666;"><strong>Question:</strong></p>
+            <p style="margin: 10px 0 0 0; font-size: 15px; color: #333; line-height: 1.6;">${question}</p>
+          </div>
+          <div style="background: #fff3cd; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <p style="margin: 0; font-size: 14px; color: #856404;">
+              💡 <strong>Tip:</strong> Quick responses help build trust with potential buyers!
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${productLink}" style="display: inline-block; background: #007bff; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Reply Now →</a>
+          </div>
+        </div>
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+          <p>ThinkLab Auction System</p>
+        </div>
       </div>
     `,
   });
@@ -291,14 +472,42 @@ export const sendNewAnswerEmail = async (
   await sendCustomEmail({
     to: process.env.MAIL as string,
     bcc: emails,
-    subject: `💬 Seller Replied: ${productName}`,
+    subject: `💬 Seller Replied to Your Question: "${productName}"`,
     html: `
-      <h3>New update on the product you are following</h3>
-      <div style="background:#f9f9f9; padding:15px; border-left: 4px solid #8D0000; margin-bottom: 15px;">
-        <p style="margin: 0 0 10px 0;"><strong>Q:</strong> ${question}</p>
-        <p style="margin: 0;"><strong>A:</strong> ${answer}</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #28a745 0%, #218838 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0; font-size: 24px;">💬 New Answer Available</h2>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <p style="font-size: 16px; color: #333; line-height: 1.6;">
+            The seller has responded to a question about a product you're interested in:
+          </p>
+          <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #28a745;">
+            <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
+          </div>
+          <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6;">
+              <p style="margin: 0 0 5px 0; font-size: 12px; color: #6c757d; text-transform: uppercase; font-weight: bold;">Question</p>
+              <p style="margin: 0; font-size: 15px; color: #333; line-height: 1.6;">${question}</p>
+            </div>
+            <div>
+              <p style="margin: 0 0 5px 0; font-size: 12px; color: #6c757d; text-transform: uppercase; font-weight: bold;">Answer</p>
+              <p style="margin: 0; font-size: 15px; color: #333; line-height: 1.6; font-weight: 500;">${answer}</p>
+            </div>
+          </div>
+          <div style="background: #e8f5e9; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #28a745;">
+            <p style="margin: 0; font-size: 14px; color: #2e7d32;">
+              💡 <strong>Interested?</strong> Check out the full discussion and place your bid!
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${productLink}" style="display: inline-block; background: #28a745; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View Discussion →</a>
+          </div>
+        </div>
+        <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
+          <p>ThinkLab Auction System</p>
+        </div>
       </div>
-      <a href="${productLink}" style="color: #8D0000; font-weight: bold;">View Discussion &rarr;</a>
     `,
   });
 };
