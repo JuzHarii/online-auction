@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 // import userIcon from '@/assets/user.png';
-import userIcon from '../assets/user.png'
+import userIcon from '../assets/user.png';
 // const userIcon = require('./assets/user.png'); // ! WTF?
-import { useUser } from '../UserContext'
-import { Profile } from "../components/user-profile/interfaces"
-import UserAction from "../components/user-profile/user-profile"
-import { Link } from "react-router-dom"
-import { ClipLoader } from "react-spinners"
+import { useUser } from '../UserContext';
+import { Profile } from '../components/user-profile/interfaces';
+import UserAction from '../components/user-profile/user-profile';
+import { Link } from 'react-router-dom';
+import { ClipLoader } from 'react-spinners';
 import { SellerStatus } from '../components/user-profile/seller-status';
 
 export default function UserProfile() {
@@ -53,11 +53,12 @@ export default function UserProfile() {
     fetchProfile();
   }, [user, navigate]);
 
-  if (loading) return(
-    <div className="min-h-[50vh] w-full flex flex-col justify-center items-center"> 
-      <ClipLoader size={50} color="#8D0000"/>
-    </div>
-  )
+  if (loading)
+    return (
+      <div className="min-h-[50vh] w-full flex flex-col justify-center items-center">
+        <ClipLoader size={50} color="#8D0000" />
+      </div>
+    );
   if (!profile) return <div className="text-center py-32 text-red-500">Error</div>;
 
   return (
@@ -197,7 +198,7 @@ export default function UserProfile() {
         </div>
 
         {/* TABS */}
-        <UserAction profile={ profile }action={action} setAction={setAction} />
+        <UserAction profile={profile} action={action} setAction={setAction} />
       </div>
     </div>
   );

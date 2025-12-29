@@ -43,10 +43,9 @@ export const getAddressParts = (fullAddress?: string | null) => {
   };
 };
 
-function EditProfile( {profile, setAction} : {profile: Profile, setAction: SetAction} ) {
-
+function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetAction }) {
   const formatDateForInput = (dateInput?: string | Date | null) => {
-    if (!dateInput) return "";
+    if (!dateInput) return '';
 
     // Trường hợp 1: Nếu là chuỗi dạng "d/m/y" (VD: "7/5/2005" hoặc "13/05/2005")
     if (typeof dateInput === 'string' && dateInput.includes('/')) {
@@ -139,11 +138,11 @@ function EditProfile( {profile, setAction} : {profile: Profile, setAction: SetAc
       console.error('[v0] Update error:', err);
     } finally {
       setLoading(false);
-      profile.name = data.name
-      profile.email = data.email
-      profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`
-      profile.birthdate = data.birthdate? data.birthdate:""
-      alert("Edited profile successfully!")
+      profile.name = data.name;
+      profile.email = data.email;
+      profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
+      profile.birthdate = data.birthdate ? data.birthdate : '';
+      alert('Edited profile successfully!');
     }
   };
 
@@ -451,17 +450,16 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
       setLoading(false);
       const result = await res.json();
 
-        if (!result.isSuccess) {
-          console.log("Fail full!!!")
-          setError(result.message)
-        } else {
-          alert("Changed password successfully!")
-          setError(null);
-          setAction("view-tabs")
-        }
-
-    } catch(e) {
-        console.error(e)
+      if (!result.isSuccess) {
+        console.log('Fail full!!!');
+        setError(result.message);
+      } else {
+        alert('Changed password successfully!');
+        setError(null);
+        setAction('view-tabs');
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -593,7 +591,6 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [requestType, setRequestType] = useState<'permanent' | 'temporary'>('permanent');
 
   const onSubmitRequest = async () => {
     if (!message || message.trim() === '') {
@@ -610,7 +607,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: message,
-          request_type: requestType,
+          request_type: 'temporary',
         }),
       });
 
@@ -639,9 +636,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
 
   return (
     <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4">
-      <h1 className="text-3xl font-bold text-foreground">
-        Let us know why you want to be a seller
-      </h1>
+      <h1 className="text-3xl font-bold text-foreground">Request Seller Access (7 Days)</h1>
 
       <hr />
 
@@ -654,60 +649,18 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
         }}
         className="flex flex-col gap-6"
       >
-        <div className="flex flex-col gap-4">
-          <label className="text-lg font-semibold text-gray-900">Request Type</label>
-
-          <div className="space-y-3">
-            <label
-              className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-              style={{ borderColor: requestType === 'permanent' ? '#8D0000' : '#e5e7eb' }}
-            >
-              <input
-                type="radio"
-                name="request_type"
-                value="permanent"
-                checked={requestType === 'permanent'}
-                onChange={(e) => setRequestType(e.target.value as 'permanent')}
-                className="mt-1 w-4 h-4 text-[#8D0000] focus:ring-[#8D0000]"
-              />
-              <div className="flex-1">
-                <div className="font-semibold text-gray-900 flex items-center gap-2">
-                  Permanent Seller
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                    Recommended
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Become a seller indefinitely. No time limit, full access to all seller features.
-                </div>
+        <div className="p-4 border border-blue-300 rounded-lg bg-blue-50">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <div className="font-semibold text-blue-900 flex items-center gap-2 mb-2">
+                Seller Access (7 Days)
               </div>
-            </label>
-
-            <label
-              className="flex items-start gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-              style={{ borderColor: requestType === 'temporary' ? '#8D0000' : '#e5e7eb' }}
-            >
-              <input
-                type="radio"
-                name="request_type"
-                value="temporary"
-                checked={requestType === 'temporary'}
-                onChange={(e) => setRequestType(e.target.value as 'temporary')}
-                className="mt-1 w-4 h-4 text-[#8D0000] focus:ring-[#8D0000]"
-              />
-              <div className="flex-1">
-                <div className="font-semibold text-gray-900 flex items-center gap-2">
-                  Temporary Seller (7 Days)
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                    Trial
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Try being a seller for 7 days. Perfect for testing or one-time sales.
-                  Automatically reverts after 7 days.
-                </div>
+              <div className="text-sm text-blue-700">
+                You will receive seller permissions for 7 days after approval. During this time, you
+                can create and manage product listings. After 7 days, your seller access will
+                automatically expire, but your existing products will remain active.
               </div>
-            </label>
+            </div>
           </div>
         </div>
 
@@ -761,7 +714,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
 }
 
 function ViewTabs({ profile, setAction }: { profile: Profile; setAction: SetAction }) {
-  return <UserTab profile={ profile } />;
+  return <UserTab profile={profile} />;
 }
 
 export default function UserAction({

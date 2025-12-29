@@ -7,6 +7,7 @@ interface SellerStatusData {
   isTemporary: boolean;
   expiresAt?: string;
   daysRemaining?: number;
+  hoursRemaining?: number;
 }
 
 export function SellerStatus() {
@@ -50,6 +51,18 @@ export function SellerStatus() {
 
   if (status.isTemporary && status.daysRemaining !== undefined) {
     const isExpiringSoon = status.daysRemaining <= 2;
+    const expirationDate = status.expiresAt ? new Date(status.expiresAt) : null;
+    const hoursRemaining = status.hoursRemaining || 0;
+
+    // Display format based on time remaining
+    let timeRemainingDisplay = '';
+    if (status.daysRemaining > 1) {
+      timeRemainingDisplay = `${status.daysRemaining} ${status.daysRemaining === 1 ? 'day' : 'days'} left`;
+    } else if (hoursRemaining > 0) {
+      timeRemainingDisplay = `${hoursRemaining} ${hoursRemaining === 1 ? 'hour' : 'hours'} left`;
+    } else {
+      timeRemainingDisplay = 'Expiring soon';
+    }
 
     return (
       <div
@@ -64,51 +77,54 @@ export function SellerStatus() {
             <Clock className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
           )}
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-2">
               <h3
                 className={`font-semibold ${isExpiringSoon ? 'text-red-900' : 'text-yellow-900'}`}
               >
-                Temporary Seller
+                Seller Access (7 Days)
               </h3>
               <span
-                className={`text-xs px-2 py-1 rounded-full ${
+                className={`text-xs px-2 py-1 rounded-full font-semibold ${
                   isExpiringSoon ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'
                 }`}
               >
-                {status.daysRemaining} {status.daysRemaining === 1 ? 'day' : 'days'} left
+                {timeRemainingDisplay}
               </span>
             </div>
-            <p className={`text-sm ${isExpiringSoon ? 'text-red-700' : 'text-yellow-700'}`}>
-              Your seller permissions will expire on{' '}
-              {status.expiresAt &&
-                new Date(status.expiresAt).toLocaleString('en-US', {
-                  dateStyle: 'long',
-                  timeStyle: 'short',
-                })}
-            </p>
+
+            {expirationDate && (
+              <div className="space-y-1 mb-2">
+                <div
+                  className={`text-sm flex items-center gap-2 ${isExpiringSoon ? 'text-red-700' : 'text-yellow-700'}`}
+                >
+                  <span className="font-medium">Expires on:</span>
+                  <span className="font-semibold">
+                    {expirationDate.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  <span className="text-xs">
+                    at{' '}
+                    {expirationDate.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {isExpiringSoon && (
               <p className="text-sm text-red-700 mt-2 font-medium">
-                ⚠️ Your seller access is expiring soon! Request permanent seller status to continue
-                selling.
+                ⚠️ Your seller access is expiring soon! You can request another 7-day access period
+                after it expires.
               </p>
             )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (status.requestType === 'permanent') {
-    return (
-      <div className="p-4 border border-green-300 rounded-lg bg-green-50">
-        <div className="flex items-start gap-3">
-          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-green-900 flex items-center gap-2">
-              Permanent Seller
-            </h3>
-            <p className="text-sm text-green-700">
-              You have full seller access with no time limit. Keep selling!
+            <p className="text-sm mt-2 text-gray-600">
+              Note: Your existing products will remain active even after your seller access expires.
             </p>
           </div>
         </div>

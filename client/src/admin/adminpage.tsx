@@ -347,8 +347,6 @@ const CategoryManagement: React.FC = () => {
     }
   };
 
-  
-
   const handleAddCategory = async (category: Category) => {
     try {
       setLoading(true);
@@ -428,7 +426,7 @@ const CategoryManagement: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                     {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
                     {/* <button className={getButtonClasses('ghost', 'icon', "text-yellow-600 hover:text-yellow-800 mr-2")} title="Edit"><Edit className="h-4 w-4" /></button> */}
-                    
+
                     <button
                       className={iconGhostBlueClass}
                       title="View Details"
@@ -958,7 +956,7 @@ const UpgradeRequestsManagement: React.FC = () => {
                 User Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Request Type
+                Duration
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 Request Date
@@ -978,15 +976,9 @@ const UpgradeRequestsManagement: React.FC = () => {
                   {request.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  {request.request_type === 'temporary' ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
-                      7 Days
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                      Permanent
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                    7 Days
+                  </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(request.request_at).toLocaleString()}

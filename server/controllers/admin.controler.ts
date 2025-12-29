@@ -208,30 +208,16 @@ export const responseUpgradeRequest = async (req: Request, res: Response) => {
     const content = req.body;
 
     if (content.answer === 'approve') {
-      // Get the request to check its type
-      const request = await db.prisma.sellerUpgradeRequest.findUnique({
-        where: { request_id: content.id },
-        select: { request_type: true },
-      });
-
-      if (!request) {
-        return res.status(404).json(errorResponse('Request not found'));
-      }
-
-      // Only set expiration for temporary requests
-      const updateData: any = {
-        is_approved: true,
-        processed_at: new Date(),
-      };
-
-      if (request.request_type === 'temporary') {
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
-        updateData.expires_at = expiresAt;
-      }
+      // All requests are temporary (exactly 7 days = 168 hours)
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
       await db.prisma.sellerUpgradeRequest.update({
-        data: updateData,
+        data: {
+          is_approved: true,
+          processed_at: new Date(),
+          expires_at: expiresAt,
+        },
         where: {
           request_id: content.id,
         },
