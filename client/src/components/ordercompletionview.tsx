@@ -1,6 +1,7 @@
 import { useState, ChangeEvent, useEffect } from 'react';
 import { CheckCircle2, Circle, MessageSquare, XCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { OrderChat } from './order-chat';
+import { ClipLoader } from 'react-spinners';
 
 // ---------- TYPES ----------
 type OrderStatus = 'pending_payment' | 'payment_confirmed' | 'shipped' | 'completed' | 'cancelled';
@@ -16,6 +17,8 @@ interface Order {
   is_seller: boolean;
   cur_user_id: string;
   is_reviewed: boolean;
+  review: string | null;
+  likestatus: boolean | null;
   partner_name: string;
   partner_id: string;
   cur_name: string;
@@ -49,6 +52,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
   const [review, setReview] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(order.is_reviewed);
   const [isEditingReview, setIsEditingReview] = useState(false);
+  const [loadingSubmit, setloadingSubmit] = useState(false);
 
   const isBuyer = !order.is_seller;
   const isCancelled = order.status === 'cancelled';
@@ -82,6 +86,13 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
 
   useEffect(() => {
     setOrder(orderProp);
+    if (orderProp.likestatus) {
+      console.log(orderProp.likestatus)
+      setLikeStatus(orderProp.likestatus ? 'like' : 'dislike');
+    }
+    if (orderProp.review) 
+      setReview(orderProp.review);
+
     setShippingAddress(orderProp.shipping_address ?? '');
     setReviewSubmitted(orderProp.is_reviewed);
   }, [orderProp]);
@@ -167,6 +178,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
         payload.shipping_invoice = base64Image;
       }
 
+      setloadingSubmit(true)
       const res = await fetch(`/api/payment/${order.order_id}`, {
         method: 'PUT',
         credentials: 'include',
@@ -175,11 +187,14 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
       });
 
       if (!res.ok) {
+        setloadingSubmit(false)
         alert('Failed to connect to server');
         return;
       }
 
       const result = await res.json();
+      setloadingSubmit(false)
+
       if (!result.isSuccess) {
         alert(result.message);
         return;
@@ -203,7 +218,9 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
       alert('Need to choose like or dislike!');
       return;
     }
+    console.log(likeStatus, review)
     try {
+      setloadingSubmit(true);
       const res = await fetch(`/api/payment-review/${order.order_id}`, {
         method: 'POST',
         credentials: 'include',
@@ -217,8 +234,13 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
         }),
       });
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        setloadingSubmit(false);
+        return;
+      } 
+
       const result = await res.json();
+      setloadingSubmit(false);
       if (!result.isSuccess) {
         alert(result.message);
         return;
@@ -226,7 +248,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
 
       setReviewSubmitted(true);
       setIsEditingReview(false);
-      alert("Review saved successfully!");
     } catch (e) {
       alert("Error submitting review");
     }
@@ -270,7 +291,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
               <MessageSquare className="h-4 w-4 mr-2" /> Chat
             </button>
             {order.is_seller && order.status !== 'completed' && (
-              <button className={`h-10 px-4 rounded-md ${DESTRUCTIVE}`} onClick={() => handleSubmit(null, 'cancelled')}>
+              <button className={`h-10 px-4 rounded-md ${DESTRUCTIVE} self-end`} onClick={() => handleSubmit(null, 'cancelled')}>
                 Cancel Transaction
               </button>
             )}
@@ -290,7 +311,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                 {idx < steps.length - 1 && <div className="w-px h-20 bg-gray-300 mt-2" />}
               </div>
 
-              <div className="flex-1 pb-8">
+              <div className="flex-1 pb-8 justify-center">
                 <h3 className="font-semibold text-lg">Step {step.number}: {step.title}</h3>
                 <p className="text-sm text-gray-500 mb-4">{step.description}</p>
 
@@ -313,13 +334,17 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                     )}
                     <input id="paymentInvoiceInput" type="file" accept=".pdf,.jpg,.png" onChange={handlePaymentInvoiceChange} className="hidden" />
                     {paymentInvoicePreview && (
-                      <div className="relative inline-block">
+                      <div className="relative block">
                         <img src={paymentInvoicePreview} className="mt-2 h-32 object-contain border rounded" alt="Preview" />
                         <button onClick={handleDeletePaymentInvoice} className="absolute -top-1 -right-1 bg-black text-white rounded-full w-6 h-6 flex items-center justify-center">×</button>
                       </div>
                     )}
-                    <button className={`h-10 px-4 mt-2 rounded-md ${PRIMARY}`} onClick={() => handleSubmit(shippingAddress, 'payment_confirmed')}>
-                      Submit address & pay
+                    <button className={`h-10 px-4 mt-2 rounded-md ${PRIMARY} self-end`} onClick={() => handleSubmit(shippingAddress, 'payment_confirmed')}>
+                      {loadingSubmit ? (
+                        <ClipLoader size={20} color='white' />
+                      ) : (
+                        'Submit address & pay'
+                      )}
                     </button>
                   </div>
                 )}
@@ -330,21 +355,27 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                 {/* STEP 2 Logic */}
                 {step.number === 2 && order.is_seller && order.status === 'payment_confirmed' && (
                   <div className="space-y-3">
+                    {!shippingInvoicePreview && (
                     <div
                       onClick={() => document.getElementById('shippingInvoiceInput')?.click()}
                       className="border-2 border-dashed border-gray-300 rounded-lg h-32 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition"
                     >
                       <p className="text-gray-500 text-sm">Upload shipping invoice</p>
-                    </div>
+                    </div>)}
                     <input id="shippingInvoiceInput" type="file" accept=".pdf,.jpg,.png" onChange={handleShippingInvoiceChange} className="hidden" />
                     {shippingInvoicePreview && (
-                      <div className="relative inline-block">
+                      <div className="relative block">
                         <img src={shippingInvoicePreview} className="mt-2 h-32 object-contain border rounded" alt="Shipping Preview" />
                         <button onClick={handleDeleteShippingInvoice} className="absolute -top-1 -right-1 bg-black text-white rounded-full w-6 h-6 flex items-center justify-center">×</button>
                       </div>
                     )}
                     <button className={`h-10 px-4 rounded-md ${PRIMARY}`} disabled={!shippingInvoice} onClick={() => handleSubmit(null, 'shipped')}>
-                      Confirm shipment
+                      {/* Confirm shipment */}
+                      {loadingSubmit ? (
+                        <ClipLoader size={20} color='white' />
+                      ) : (
+                        'Confirm shipment'
+                      )}
                     </button>
                   </div>
                 )}
@@ -359,7 +390,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                   </button>
                 )}
 
-                {/* ⭐ Rating / Review Section */}
+                {/* Rating / Review Section */}
                 {step.number === 3 && order.status === 'completed' && (
                   <div className="mt-6 border rounded-lg p-5 bg-gray-50 space-y-4">
                     <div className="flex justify-between items-center">
@@ -407,7 +438,11 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                         />
                         <div className="flex gap-2">
                           <button className={`${PRIMARY} h-10 px-6 rounded-md font-medium`} onClick={handleSubmitReview}>
-                            {reviewSubmitted ? 'Update Review' : 'Submit Review'}
+                            {loadingSubmit ? (
+                              <ClipLoader size={20} color='white' />
+                            ) : (
+                              reviewSubmitted ? 'Update Review' : 'Submit Review'
+                            )}
                           </button>
                           {isEditingReview && (
                             <button className="h-10 px-4 rounded-md border bg-white hover:bg-gray-100" onClick={() => setIsEditingReview(false)}>

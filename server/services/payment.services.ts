@@ -2,6 +2,7 @@ import db from './database.ts';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { BUCKET_NAME, s3Client } from '../config/s3.ts';
 import { Readable } from 'stream';
+import { Console } from 'console';
 
 /* ================= GET ORDER ================= */
 export const getOrderService = async (orderid: string, curUser: any) => {
@@ -38,17 +39,51 @@ export const getOrderService = async (orderid: string, curUser: any) => {
   }
 
   const isSeller = String(orderFromDB.seller_id) === curUserId;
+  const isWinner = String(orderFromDB.buyer_id) === curUserId;
 
   let partner_id;
   let partner_name;
   let isReviewed;
-
+  let review =  null
+  let likestatus = null
   if (isSeller) {
     isReviewed = orderFromDB.seller_review_id !== null;
+    if (orderFromDB.seller_review_id !== null) {
+      const reviewdata = await db.prisma.reviews.findUnique({
+        where: {
+          review_id: orderFromDB.seller_review_id,
+        },
+        select: {
+          review_id: true,
+          comment: true,
+          is_positive: true,
+        }
+      })
+      if (reviewdata) {
+        review = reviewdata.comment,
+        likestatus = reviewdata.is_positive
+      }
+    }
     partner_id = String(orderFromDB.buyer_id);
     partner_name = String(orderFromDB.buyer.name);
-  } else {
+  } else if (isWinner) {
     isReviewed = orderFromDB.buyer_review_id !== null;
+    if (orderFromDB.buyer_review_id !== null) {
+      const reviewdata = await db.prisma.reviews.findUnique({
+        where: {
+          review_id: orderFromDB.buyer_review_id,
+        },
+        select: {
+          review_id: true,
+          comment: true,
+          is_positive: true,
+        }
+      })
+      if (reviewdata) {
+        review = reviewdata.comment,
+        likestatus = reviewdata.is_positive
+      }
+    }
     partner_id = String(orderFromDB.seller_id);
     partner_name = String(orderFromDB.seller.name);
   }
@@ -67,7 +102,9 @@ export const getOrderService = async (orderid: string, curUser: any) => {
     is_seller: isSeller,
     cur_user_id: curUserId,
     is_reviewed: isReviewed,
-    cur_name
+    cur_name,
+    review,
+    likestatus
   };
 };
 
@@ -115,16 +152,45 @@ export const changeOrderService = async (orderid: string, body: any) => {
 
 /* ================= REVIEW ================= */
 export const addReviewService = async (body: any) => {
-  return db.prisma.reviews.create({
-    data: {
+  const review = await db.prisma.reviews.findFirst({
+    where: {
       reviewer_id: body.reviewer_id,
       reviewee_id: body.reviewee_id,
       product_id: BigInt(body.product_id),
-      is_positive: body.is_positive,
-      comment: body.comment
-    }
+    },
   });
-};
+  
+  if (!review) {
+    return db.prisma.reviews.create({
+      data: {
+        reviewer_id: body.reviewer_id,
+        reviewee_id: body.reviewee_id,
+        product_id: BigInt(body.product_id),
+        is_positive: body.is_positive,
+        comment: body.comment
+      }
+    });
+  }
+  else {
+    const updatedReview = await db.prisma.reviews.update({
+      where: {
+        review_id: review.review_id
+      },
+      data: {
+        is_positive: body.is_positive,
+        comment: body.comment,
+      },
+      select: {
+        reviewee_id: true,
+        reviewer_id: true,
+        product_id: true,
+        is_positive: true,
+        comment: true,
+      },
+    });
+    return updatedReview;
+  }
+}
 
 /* ================= CHAT ================= */
 export const addChatService = async (body: any) => {

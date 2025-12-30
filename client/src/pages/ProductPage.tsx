@@ -47,14 +47,15 @@ const ProductPage = () => {
       const res = await fetch(`/api/product/${id}`);
       if (!res.ok) throw new Error('Failed to fetch product');
       const data: Product = await res.json();
+      
+      if (data.orderId !== null) {
+        navigate(`/payment/${data.orderId}`)
+      }
       setProduct(data);
       if (data.images && data.images.length > 0) {
         setActiveImage(data.images[0]);
       }
       
-      if (data.orderId !== null) {
-        navigate(`/payment/${data.orderId}`)
-      }
     } catch (error) {
       console.error('Error fetching product:', error);
     }

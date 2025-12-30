@@ -15,6 +15,8 @@ interface Order {
   is_seller: boolean;
   cur_user_id: string;
   is_reviewed: boolean;
+  review: string | null;
+  likestatus: boolean | null;
   partner_name: string;
   partner_id: string;
   cur_name: string;
@@ -42,7 +44,7 @@ export default function Payment() {
           setError(result.message);
           return;
         }
-
+        console.log(result.data)
         setOrder(result.data);
         setLoading(true);
       } catch (err) {
