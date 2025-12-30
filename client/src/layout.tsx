@@ -17,6 +17,7 @@ function Layout() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [showOrders, setShowOrders] = useState(false);
   const [showUser, setShowUser] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const bellRef = useRef<HTMLLIElement>(null);
   const userRef = useRef<HTMLLIElement>(null);
 
@@ -31,6 +32,7 @@ function Layout() {
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       const res = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
@@ -39,10 +41,12 @@ function Layout() {
       const result = await res.json();
       if (res.ok && result.isSuccess) {
         setUser(null);
-        navigate('/');
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsLoading(false)
+      navigate('/');
     }
   };
 
@@ -211,27 +215,25 @@ function Layout() {
                           </div>
                           <div className='font-bold text-[#8D0000]'>{user.name}</div>
                         </li>
-                        <Link to={"/profile"} className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:font-bold cursor-pointer'>
+                        <Link to={"/profile"} className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:text-black cursor-pointer'>
                           <div 
-                            className='bg-gray-200 rounded-full p-1 hover:cursor-pointer'
+                            className='bg-gray-200 rounded-full p-1'
                           >
                             <Eye className='w-5 h-5'/>
                           </div>
                           <div>View Profile</div>
                         </Link>
-                        <li className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:font-bold cursor-pointer'>
+                        <li
+                          onClick={handleLogout}
+                          className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:text-black cursor-pointer'
+                        >
                           <div 
-                            className='bg-gray-200 rounded-full p-1 hover:cursor-pointer'
+                            className='bg-gray-200 rounded-full p-1'
                           >
                             <LogOut className=' w-5 h-5'/>
                           </div>
-                          <div
-                            onClick={() => {
-                              handleLogout();
-                              navigate('/');
-                            }}
-                          >
-                            Logout
+                          <div>
+                            {isLoading ? "Signing out..." : "Sign out"}
                           </div>
                         </li>
                       </ul>

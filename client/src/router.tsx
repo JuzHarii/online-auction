@@ -10,7 +10,11 @@ import Products from './pages/Products.tsx';
 import AdminPage from './admin/adminpage.tsx';
 import UserProfile from './pages/UserProfile.tsx';
 import Payment from './pages/PaymentPage.tsx';
+import { useEffect } from 'react';
 function Router() {
+  useEffect(() => {
+    document.title = "ThinkLAB";
+  }, []);
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
