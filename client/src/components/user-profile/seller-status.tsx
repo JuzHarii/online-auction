@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { formatDateTime } from '../product';
 
 interface SellerStatusData {
   role: string;
@@ -77,19 +78,21 @@ export function SellerStatus() {
             <Clock className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
           )}
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="mb-2">
               <h3
                 className={`font-semibold ${isExpiringSoon ? 'text-red-900' : 'text-yellow-900'}`}
               >
                 Seller Access (7 Days)
               </h3>
-              <span
-                className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                  isExpiringSoon ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'
-                }`}
-              >
-                {timeRemainingDisplay}
-              </span>
+              <div className="mt-1">
+                <span
+                  className={`inline-block text-xs px-2 py-1 rounded-full font-semibold ${
+                    isExpiringSoon ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800'
+                  }`}
+                >
+                  {timeRemainingDisplay}
+                </span>
+              </div>
             </div>
 
             {expirationDate && (
@@ -119,7 +122,7 @@ export function SellerStatus() {
 
             {isExpiringSoon && (
               <p className="text-sm text-red-700 mt-2 font-medium">
-                ⚠️ Your seller access is expiring soon! You can request another 7-day access period
+                Your seller access is expiring soon! You can request another 7-day access period
                 after it expires.
               </p>
             )}

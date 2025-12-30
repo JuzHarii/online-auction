@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import userIcon from '@/assets/user.png';
 import userIcon from '../assets/user.png';
-// const userIcon = require('./assets/user.png'); // ! WTF?
 import { useUser } from '../UserContext';
 import { Profile } from '../components/user-profile/interfaces';
 import UserAction from '../components/user-profile/user-profile';

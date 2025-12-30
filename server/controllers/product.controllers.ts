@@ -323,9 +323,9 @@ export const getProduct = async (req: Request, res: Response) => {
 
     const descriptionList = productData.description_history.map((hist) => ({
       text: hist.description,
-      date: new Date(hist.added_at).toLocaleDateString('vi-VN', {
+      date: new Date(hist.added_at).toLocaleDateString('en-GB', {
         year: 'numeric',
-        month: 'short',
+        month: 'numeric',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',

@@ -44,9 +44,14 @@ export const BidderSidebar = ({
           body: JSON.stringify({ amount: bidValue }),
         });
         if (!response.ok) throw new Error('Failed to place bid');
+
+        const data = await response.json();
+
+        // Refresh product data to get updated current price
+        await onBidSuccess();
+
         alert('Bid placed successfully!');
         setBidAmount('');
-        onBidSuccess();
       } catch (error: any) {
         alert(error.message);
       } finally {

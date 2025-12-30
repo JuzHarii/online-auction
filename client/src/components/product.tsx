@@ -16,6 +16,28 @@ export const formatDate = (dateStr: string | null | undefined): string => {
   });
 };
 
+export const formatDateTime = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-GB', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+export const formatDateTimeLong = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleString('en-GB', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+};
+
 export const calculateTimeRemaining = (endTimeStr: string | null | undefined): string => {
   if (!endTimeStr) return 'N/A';
 
