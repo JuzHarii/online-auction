@@ -233,7 +233,7 @@ function Layout() {
                             <LogOut className=' w-5 h-5'/>
                           </div>
                           <div>
-                            {isLoading ? "Logging out..." : "Log out"}
+                            {isLoading ? "Signing out..." : "Sign out"}
                           </div>
                         </li>
                       </ul>
