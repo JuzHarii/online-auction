@@ -87,7 +87,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
   useEffect(() => {
     setOrder(orderProp);
     if (orderProp.likestatus) {
-      console.log(orderProp.likestatus)
       setLikeStatus(orderProp.likestatus ? 'like' : 'dislike');
     }
     if (orderProp.review) 
@@ -218,7 +217,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
       alert('Need to choose like or dislike!');
       return;
     }
-    console.log(likeStatus, review)
     try {
       setloadingSubmit(true);
       const res = await fetch(`/api/payment-review/${order.order_id}`, {
