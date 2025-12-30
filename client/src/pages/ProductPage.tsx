@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Share2, Heart, ChevronRight, Plus, Pencil } from 'lucide-react'; // Removed unused imports
 import { ClipLoader } from 'react-spinners';
-import { useParams } from 'react-router-dom';
-import { MemoProductCard } from '../components/product';
+import { useNavigate, useParams } from 'react-router-dom';
 import ReactQuill from 'react-quill-new'; // Import Quill
 import 'react-quill-new/dist/quill.snow.css'; // Import Styles
+import { MemoProductCard } from '../components/product';
 
 import { SellerSidebar } from '../components/seller-sidebar';
 import { BidderSidebar } from '../components/bidder-sidebar';
 import { ProductQA } from '../components/productQA';
 import { Product } from '../lib/type';
+import { calculateTimeRemaining } from '../components/product';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('vi-VN', {
@@ -35,6 +36,8 @@ const ProductPage = () => {
   const [newDesc, setNewDesc] = useState('');
   const [isSavingDesc, setIsSavingDesc] = useState(false);
 
+  const navigate = useNavigate();
+
   // 1. Fetch dữ liệu
   const fetchProduct = async () => {
     try {
@@ -45,10 +48,15 @@ const ProductPage = () => {
       const res = await fetch(`/api/product/${id}`);
       if (!res.ok) throw new Error('Failed to fetch product');
       const data: Product = await res.json();
+      
+      if (data.orderId !== null) {
+        navigate(`/payment/${data.orderId}`)
+      }
       setProduct(data);
       if (data.images && data.images.length > 0) {
         setActiveImage(data.images[0]);
       }
+      
     } catch (error) {
       console.error('Error fetching product:', error);
     }
@@ -100,7 +108,7 @@ const ProductPage = () => {
 
   if (!product) {
     return (
-      <div className="min-h-[50vh] w-full flex flex-col justify-center items-center bg-gray-50">
+      <div className="min-h-[50vh] w-full flex flex-col justify-center items-center">
         <ClipLoader size={40} color="#8D0000" />
         <p className="mt-4 text-gray-500 text-sm font-medium">Loading product details...</p>
       </div>
@@ -108,7 +116,7 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8 font-sans text-black">
+    <div className="min-h-screen py-8 font-sans text-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <div className="text-sm breadcrumbs mb-6 text-gray-500 flex items-center gap-2">

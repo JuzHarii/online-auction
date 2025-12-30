@@ -101,6 +101,7 @@ export interface SellingProduct extends ProductCard {
     name: string;
   } | null;
 
+  created_at: string;
   auto_extend: boolean;
   editable: boolean; // True nếu chưa có ai bid
   reviews_count: number;
@@ -700,12 +701,13 @@ export const UserControllers = {
         return res.status(500).json(errorResponse('Internal server error'));
       }
     },
-    getReviewsFromBuyers: async (req: Request, res: Response) => {
+
+    getReviews: async (req: Request, res: Response) => {
       try {
         const user_id = res.locals.user.id;
         if (!user_id) return res.status(401).json(errorResponse('Unauthorized'));
 
-        const reviews = await UserServices.BidderServices.getReviewsFromBuyers(user_id);
+        const reviews = await UserServices.BidderServices.getReviews(user_id);
 
         const payload: Review[] = reviews.map((review) => ({
           review_id: review.review_id.toString(),
@@ -745,6 +747,53 @@ export const UserControllers = {
         return res.status(500).json(errorResponse('Internal server error'));
       }
     },
+
+    getReviewsFromBuyers: async (req: Request, res: Response) => {
+      try {
+        const user_id = res.locals.user.id;
+        if (!user_id) return res.status(401).json(errorResponse('Unauthorized'));
+
+        const reviews = await UserServices.BidderServices.getReviews(user_id);
+
+        const payload: Review[] = reviews.map((review) => ({
+          review_id: review.review_id.toString(),
+          reviewer: {
+            user_id: review.reviewer.user_id,
+            name: review.reviewer.name,
+          },
+
+          product: {
+            product_id: review.product.product_id.toString(),
+            product_name: review.product.name,
+            category: {
+              category_id: review.product.category.category_id.toString(),
+              category_name_level_1: review.product.category.name_level_1,
+              category_name_level_2: review.product.category.name_level_2
+                ? review.product.category.name_level_2
+                : '',
+            },
+            thumbnail_url: review.product.images[0].image_url,
+          },
+
+          is_positive: review.is_positive,
+          comment: review.comment,
+          created_at: new Date(review.created_at).toLocaleDateString(),
+        }));
+
+        return res
+          .status(200)
+          .json(
+            successResponse(
+              payload,
+              payload.length ? 'Get bidding products successfullly' : 'No bidding product'
+            )
+          );
+      } catch (e) {
+        console.log(e);
+        return res.status(500).json(errorResponse('Internal server error'));
+      }
+    },
+
     getReviewsFromSellers: async (req: Request, res: Response) => {
       try {
         const user_id = res.locals.user.id;
@@ -830,6 +879,7 @@ export const UserControllers = {
           auto_extend: product.auto_extend,
           editable: product.bids.length === 0,
           reviews_count: product._count.reviews,
+          created_at: new Date(product.created_at).toLocaleDateString(),
         }));
 
         // 4. Trả về kết quả

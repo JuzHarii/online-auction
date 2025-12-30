@@ -22,23 +22,39 @@ export const ReviewController = {
         comment: comment
       }
 
-      await ReviewServices.create(review);
-      return res.status(201).json(successResponse(null, "Created review successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      const result = await ReviewServices.create(review);
+      return res.status(201).json(successResponse({
+        comment: result.comment,
+        is_positive: result.is_positive,
+        product_id: Number(result.product_id),
+        created_at: new Date(result.created_at).toLocaleDateString(),
+        review_id: Number(result.review_id),
+        reviewer_id: result.reviewer_id,
+        reviewee_id: result.reviewee_id,
+      }, "Created review successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   },
 
   update: async(req: Request, res: Response) => {
     try {
-      const { review_id, comment, is_positive } = req.body as { review_id: string, comment: string, is_positive: boolean };
+      const { review_id, comment, is_positive } = req.body as { review_id: string, comment: string | null, is_positive: boolean };
 
       if (is_positive === null) return res.status(400).json(errorResponse("Missed input data"));
 
-      await ReviewServices.update(Number(review_id), comment, is_positive);
-      return res.status(201).json(successResponse(null, "Updated review successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      const result = await ReviewServices.update(Number(review_id), comment, is_positive);
+      return res.status(201).json(successResponse({
+        comment: result.comment,
+        is_positive: result.is_positive,
+        product_id: Number(result.product_id),
+        created_at: new Date(result.created_at).toLocaleDateString(),
+        review_id: Number(result.review_id),
+        reviewer_id: result.reviewer_id,
+        reviewee_id: result.reviewee_id,
+      }, "Updated review successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   },
 
@@ -66,10 +82,10 @@ export const ReviewController = {
         is_positive: is_positive,
       }
 
-      const id = await ReviewServices.create(review);
-      return res.status(201).json(successResponse({id}, "Rated successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      await ReviewServices.create(review);
+      return res.status(201).json(successResponse(null, "Rated successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   },
 
@@ -101,10 +117,10 @@ export const ReviewController = {
         is_positive: is_positive,
       }
 
-      const id = await ReviewServices.create(review);
-      return res.status(201).json(successResponse({review_id: id}, "Commented successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      await ReviewServices.create(review);
+      return res.status(201).json(successResponse(null, "Commented successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   }
 }

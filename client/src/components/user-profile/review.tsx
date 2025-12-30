@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Trash, UndoIcon } from "lucide-react";
 import { OrderStatus, UserRole } from "@prisma/client";
+import { formatDate } from "../product";
 
 export default function ReviewBox(
   {
@@ -26,41 +27,19 @@ export default function ReviewBox(
 ) {
   const [comment, setComment] = useState(review?.comment || "");
   const [isPositive, setIsPositive] = useState<boolean | null>(review ? review.is_positive : null);
+  const [isReviewing, setIsReviewing] = useState(false)
   const [error, setError] = useState("");
+  const [localReview, setLocalReview] = useState(review);
 
   useEffect(() => {
+    setLocalReview(review);
     if (review) {
       setComment(review.comment || "");
       setIsPositive(review.is_positive);
     }
   }, [review]);
 
-  const rate = async(rateValue: boolean) => {
-    try {
-      const result = await fetch(
-        `/api/rate`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            order_id: order_id,
-            review_id: review ? review.review_id : null,
-            is_positive: rateValue,
-            role: role
-          }),
-        }
-      )
-
-      const jsonResult = await result.json();
-      if (!result.ok) throw new Error(jsonResult.message);
-      
-    } catch(e) {
-      console.log(e);
-    }
-  }
-
-  const sendComment = async() => {
+  const submitReview = async() => {
     try {
       setError("");
       if (comment == "") {
@@ -68,48 +47,80 @@ export default function ReviewBox(
         return;
       }
 
-      if (!review && isPositive === null) {
+      if (!localReview && isPositive === null) {
         setError("Please provide rating");
         return
       }
-
-      const result = await fetch(
-        `/api/comment`,
-        {
+      
+      if (!localReview) {
+        const result = await fetch(`/api/review/create`, {
           method: 'POST',
           credentials: 'include',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             order_id: order_id,
-            review_id: review?.review_id,
             comment: comment,
             is_positive: isPositive,
             role: role
           }),
-        }
-      )
+        })
+
+        const jsonResult = await result.json();
+        if (!result.ok) throw new Error(jsonResult.message);
+
+        setLocalReview({
+          review_id: jsonResult.data.review_id,
+          is_positive: jsonResult.data.is_positive,
+          comment: jsonResult.data.comment,
+          created_at: jsonResult.data.created_at
+        })
+
+        setComment(jsonResult.data.comment || "");
+        setIsPositive(jsonResult.data.is_positive);
+        
+        setIsReviewing(false);
+        return
+      }
+
+      const result = await fetch(`/api/review/update`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          review_id: localReview?.review_id,
+          comment: comment,
+          is_positive: isPositive,
+        }),
+      })
 
       const jsonResult = await result.json();
       if (!result.ok) throw new Error(jsonResult.message);
+
+      setLocalReview({
+        review_id: jsonResult.data.review_id,
+        is_positive: jsonResult.data.is_positive,
+        comment: jsonResult.data.comment,
+        created_at: jsonResult.data.created_at
+      })
+      setComment(jsonResult.data.comment || "");
+      setIsPositive(jsonResult.data.is_positive);
       
+      setIsReviewing(false);
+
     } catch(e) {
       console.log(e);
+    } finally {
+      setIsReviewing(false)
     }
   }
 
   const cancelOrder = async() => {
     try {
-      const result = await fetch(
-        `/api/order/cancel/${order_id}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-        }
-      )
-
-      const jsonResult = await result.json();
-      if (!result.ok) throw new Error(jsonResult.message);
+      const result = await fetch(`/api/order/cancel/${order_id}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+      })
 
       if (onCancelSuccess) {
         onCancelSuccess(); 
@@ -119,59 +130,93 @@ export default function ReviewBox(
     }
   }
 
-  return (
-    <div className="text-sm rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
-      <div className="flex flex-row justfiy-between gap-3">
-        <div className="w-full">
-          <label className="block text-sm font-medium mb-2">Comment (optional)</label>
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="w-full p-2 border rounded"
-            rows={4}
-          />
-        </div>
+  if (orderStatus === 'completed')
+    return (
+      <div className="mt-2">
+        {isReviewing 
+          ?  <div className="text-sm rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
+          <div className="flex flex-col justfiy-between gap-3">
+            <div className="flex gap-5 items-center">
+              <label className={`block text-base font-medium`}>My Review</label>
+              <div className="flex gap-2 items-center">
+                <ThumbsUp
+                  type="button"
+                  onClick={() => setIsPositive(true)}
+                  className={`w-5 h-5 hover:scale-105 text-[#8D0000] ${isPositive !== null && isPositive ? 'fill-[#8D0000]' : ''}`}
+                />
+                <ThumbsDown
+                  type="button"
+                  onClick={() => setIsPositive(false)}
+                  className={`w-5 h-5 hover:scale-105 text-[#8D0000] ${isPositive !== null && !isPositive ? 'fill-[#8D0000]' : ''}`}
+                />
+              </div>
+            </div>
+            <textarea
+              value={comment}
+              disabled={orderStatus !== 'completed' || !isReviewing}
+              onChange={(e) => setComment(e.target.value)}
+              className={`w-full bg-gray-100 p-2 border rounded ${isReviewing ? 'text-black' : 'text-gray-300'}`}
+              rows={4}
+            />
+            <div className="flex flex-col gap-2 items-center">
+              <button
+                onClick={submitReview}
+                className={`w-full px-4 py-1 rounded text-white bg-[#8D0000]  hover:border hover:bg-white hover:text-[#8D0000]`}
+              >
+                Submit
+              </button>
 
-        <div className="flex flex-col items-center">
-          <label className="block text-sm font-medium mb-2">Rating</label>
-          <div className="flex gap-4 mb-3">
-            <ThumbsUp
-              type="button"
-              onClick={async () => {
-                setIsPositive(true),
-                rate(true)
-              }}
-              className={`hover:scale-105 text-[#8D0000] ${isPositive !== null && isPositive ? 'fill-[#8D0000]' : ''}`}
-            />
-            <ThumbsDown
-              type="button"
-              onClick={async () => {
-                setIsPositive(false),
-                rate(false)
-              }}
-              className={`hover:scale-105 text-[#8D0000] ${isPositive !== null && !isPositive ? 'fill-[#8D0000]' : ''}`}
-            />
+              <button
+                onClick={() => setIsReviewing(false)}
+                className={`w-full px-4 py-1 rounded text-white bg-black hover:border hover:bg-white hover:text-black`}
+              >
+                Cancel
+              </button>
+            </div>
+            
           </div>
+          {error && <div className="text-[#8D0000] mt-2">{error}</div>}
+        </div>
+        : <div>
+          {localReview !== undefined && localReview !== null
+          ? <div>
+            <div className="flex justify-between">
+              <div className="flex gap-2 items-center mb-2">
+                <label className={`block text-base font-medium`}>My Review</label>
+                {localReview.is_positive === true 
+                  ? <ThumbsUp className={`w-5 h-5 text-[#8D0000] fill-[#8D0000]`}/>
+                  : <ThumbsDown className={`w-5 h-5 text-[#8D0000] fill-[#8D0000]`}/>
+                }
+                  
+              </div>
+              <div className="text-sm">{formatDate(localReview.created_at)}</div>
+            </div>
+
+
+            {localReview.comment && <p className="mb-2 text-sm p-1 w-full bg-white p-2 border border-gray-300 rounded">{localReview.comment}</p>}
+          </div>
+          : <p className="mb-2">No review yet</p>}
 
           <button
-            onClick={sendComment}
-            className="w-full px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
+            onClick={() => setIsReviewing(true)}
+            className={`w-full px-4 py-1 rounded text-white bg-black hover:border hover:bg-white hover:text-black hover:scale-101`}
           >
-            Submit
+            {localReview ? 'Edit' : 'Review'}
           </button>
-
-          {autoComment && orderStatus == 'pending_payment' &&
-            <button
-              onClick={cancelOrder}
-              className="mt-1 w-full px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
-            >
-              Cancel
-            </button>
-          }
-
-      {error && <div className="text-[#8D0000] mt-2">{error}</div>}
-        </div>
+        </div>}
       </div>
-    </div>
-  );
+
+
+    );
+
+  if (orderStatus === 'pending_payment' && autoComment)
+    return(
+      <button
+        onClick={cancelOrder}
+        className="mt-1 block w-fit self-end px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
+      >
+        Cancel
+      </button>
+    )
+
 }

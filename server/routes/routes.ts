@@ -206,6 +206,12 @@ router.get(
 );
 
 router.get(
+  '/profile/reviews',
+  authController.getAuthentication,
+  UserControllers.BidderControllers.getReviews
+);
+
+router.get(
   '/profile/reviews-from-buyers',
   authController.getAuthentication,
   UserControllers.BidderControllers.getReviewsFromBuyers
@@ -268,6 +274,18 @@ router.get(
   authController.getAuthentication,
   userControllers.getSellerStatus
 );
+
+router.post(
+  '/review/create',
+  authController.getAuthentication,
+  ReviewController.create
+),
+
+router.put(
+  '/review/update',
+  authController.getAuthentication,
+  ReviewController.update
+),
 
 router.post(
   '/rate',

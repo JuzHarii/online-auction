@@ -125,7 +125,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
       const result = await res.json();
 
       if (!res.ok) {
-        if (!result.success) {
+        if (!result.isSuccess) {
           if (result.message?.name) setError('name', { message: result.message.name });
           if (result.message?.email) setError('email', { message: result.message.email });
           if (result.message?.birthdate)
@@ -437,7 +437,7 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
     try {
       setLoading(true);
       const res = await fetch('/api/changepassword', {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -458,8 +458,8 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
         setError(null);
         setAction('view-tabs');
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error(e.message);
     }
   };
 
