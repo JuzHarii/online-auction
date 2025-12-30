@@ -26,6 +26,7 @@ export default function ReviewBox(
 ) {
   const [comment, setComment] = useState(review?.comment || "");
   const [isPositive, setIsPositive] = useState<boolean | null>(review ? review.is_positive : null);
+  const [isEditting, setIsEditting] = useState(!review && orderStatus ==='completed')
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -37,20 +38,17 @@ export default function ReviewBox(
 
   const rate = async(rateValue: boolean) => {
     try {
-      const result = await fetch(
-        `/api/rate`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            order_id: order_id,
-            review_id: review ? review.review_id : null,
-            is_positive: rateValue,
-            role: role
-          }),
-        }
-      )
+      const result = await fetch('/api/rate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          order_id: order_id,
+          review_id: review ? review.review_id : null,
+          is_positive: rateValue,
+          role: role
+        }),
+      });
 
       const jsonResult = await result.json();
       if (!result.ok) throw new Error(jsonResult.message);
@@ -72,22 +70,19 @@ export default function ReviewBox(
         setError("Please provide rating");
         return
       }
-
-      const result = await fetch(
-        `/api/comment`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            order_id: order_id,
-            review_id: review?.review_id,
-            comment: comment,
-            is_positive: isPositive,
-            role: role
-          }),
-        }
-      )
+      console.log(comment)
+      const result = await fetch(`/api/comment`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          order_id: order_id,
+          review_id: review?.review_id,
+          comment: comment,
+          is_positive: isPositive,
+          role: role
+        }),
+      })
 
       const jsonResult = await result.json();
       if (!result.ok) throw new Error(jsonResult.message);
@@ -99,17 +94,11 @@ export default function ReviewBox(
 
   const cancelOrder = async() => {
     try {
-      const result = await fetch(
-        `/api/order/cancel/${order_id}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {'Content-Type': 'application/json'},
-        }
-      )
-
-      const jsonResult = await result.json();
-      if (!result.ok) throw new Error(jsonResult.message);
+      const result = await fetch(`/api/order/cancel/${order_id}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type': 'application/json'},
+      })
 
       if (onCancelSuccess) {
         onCancelSuccess(); 
@@ -119,15 +108,18 @@ export default function ReviewBox(
     }
   }
 
+  if (orderStatus === 'completed')
   return (
     <div className="text-sm rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
       <div className="flex flex-row justfiy-between gap-3">
         <div className="w-full">
-          <label className="block text-sm font-medium mb-2">Comment (optional)</label>
+          <label className={`block text-sm font-medium mb-2`}>Comment</label>
+          {review?.comment && <p className="my-2">{review.comment}</p>}
           <textarea
             value={comment}
+            disabled={orderStatus !== 'completed' || !isEditting}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full p-2 border rounded"
+            className={`w-full p-2 border rounded ${isEditting ? 'text-black' : 'text-gray-300'}`}
             rows={4}
           />
         </div>
@@ -155,23 +147,28 @@ export default function ReviewBox(
 
           <button
             onClick={sendComment}
-            className="w-full px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
+            disabled = {!isEditting}
+            className={`w-full px-4 py-1 rounded text-white ${isEditting ? 'bg-black  hover:border hover:bg-white hover:text-black' : 'bg-gray-400'}`}
           >
             Submit
           </button>
 
-          {autoComment && orderStatus == 'pending_payment' &&
-            <button
-              onClick={cancelOrder}
-              className="mt-1 w-full px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
-            >
-              Cancel
-            </button>
-          }
 
-      {error && <div className="text-[#8D0000] mt-2">{error}</div>}
         </div>
+        
       </div>
+    {error && <div className="text-[#8D0000] mt-2">{error}</div>}
     </div>
   );
+
+  if (orderStatus === 'pending_payment' && autoComment)
+    return(
+      <button
+        onClick={cancelOrder}
+        className="mt-1 block w-fit self-end px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
+      >
+        Cancel
+      </button>
+    )
+
 }

@@ -206,6 +206,12 @@ router.get(
 );
 
 router.get(
+  '/profile/reviews',
+  authController.getAuthentication,
+  UserControllers.BidderControllers.getReviews
+);
+
+router.get(
   '/profile/reviews-from-buyers',
   authController.getAuthentication,
   UserControllers.BidderControllers.getReviewsFromBuyers

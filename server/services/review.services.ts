@@ -10,8 +10,7 @@ export interface Review {
 
 export const ReviewServices = {
   create: async(review: Review) => {
-    const id = (await db.prisma.reviews.create({data: review})).review_id;
-    return id;
+    return db.prisma.reviews.create({data: review});
   },
 
   update: async(review_id: number, comment: string | null, is_positive: boolean) => {

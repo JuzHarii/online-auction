@@ -66,10 +66,10 @@ export const ReviewController = {
         is_positive: is_positive,
       }
 
-      const id = await ReviewServices.create(review);
-      return res.status(201).json(successResponse({id}, "Rated successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      await ReviewServices.create(review);
+      return res.status(201).json(successResponse(null, "Rated successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   },
 
@@ -101,10 +101,10 @@ export const ReviewController = {
         is_positive: is_positive,
       }
 
-      const id = await ReviewServices.create(review);
-      return res.status(201).json(successResponse({review_id: id}, "Commented successfully!"));
-    } catch(e) {
-      return res.status(500).json(errorResponse(e));
+      await ReviewServices.create(review);
+      return res.status(201).json(successResponse(null, "Commented successfully!"));
+    } catch(e: any) {
+      return res.status(500).json(errorResponse(e.message));
     }
   }
 }

@@ -41,7 +41,7 @@ function BiddingTab({ profile }: { profile: Profile }) {
     ? <div className="min-h-[50vh] w-full flex flex-col justify-center items-center">
       <ClipLoader size={50} color="#8D0000" />
     </div>
-    : <div className="flex flex-col gap-5">
+    : <div className="flex flex-col gap-2">
       <p className="text-gray-500">
         Bidding {products.length} product
         {products.length > 1 ? 's' : ''}
@@ -62,10 +62,10 @@ function BiddingTab({ profile }: { profile: Profile }) {
             >
               {product.seller.name}
             </Link>
-            <div className='flex flex-col md:items-center text-sm md:flex-row gap-5'> 
+            <div className='flex flex-col lg:items-center text-sm lg:flex-row gap-5'> 
               <Link
                 to={`/product/${product.product_id}`}
-                className="hover:text-[#8D0000] cursor-pointer w-50 h-full"
+                className="self-center hover:text-[#8D0000] cursor-pointer lg:w-50 w-full h-full"
               >
                 <img
                   src={
@@ -77,7 +77,7 @@ function BiddingTab({ profile }: { profile: Profile }) {
                 />
               </Link>
               <div className="flex flex-col gap-2 flex-grow">
-                <div className="flex flex-col md:flex-row gap-2 md:items-center justify-between">
+                <div className="flex flex-col md:flex-row gap-2 lg:items-center md:justify-between">
                   <div className='flex flex-col'>
                     <Link
                       to={`/product/${product.product_id}`}
@@ -92,12 +92,12 @@ function BiddingTab({ profile }: { profile: Profile }) {
                   </div>
                   <div className='flex flex-row justify-between md:flex-col md:items-end'>
                     <div className="font-medium text-[#8D0000]">{calculateTimeRemaining(product.end_time)}</div>
-                    <div ><span className='font-medium'>Bid at: </span> {product.bid_at}</div>
+                    <div ><span className='font-medium'>Bid at: </span> {formatDate(product.bid_at)}</div>
                   </div>
                 </div>
-                <div className="flex flex flex-col md:flex-row gap-2 md:gap-5">
-                  <div className="md:flex-2 min-w-0">
-                    <div className='flex gap-3 items-center flex-row md:flex-col md:items-start md:gap-0'>
+                <div className="flex flex flex-col lg:flex-row gap-2 lg:gap-5">
+                  <div className="lg:flex-2 min-w-0">
+                    <div className='flex gap-3 items-center flex-row lg:flex-col lg:items-start lg:gap-0'>
                       <div className="font-medium">Highest bidder:</div>
                       <Link
                         to={`/profile/${product.current_highest_bidder?.user_id}`}
@@ -107,12 +107,12 @@ function BiddingTab({ profile }: { profile: Profile }) {
                     </div>
                     <div><span className="font-medium">Current price: </span>{formatCurrency(product.current_price?.toString())}</div>
                   </div>
-                  <div className="md:flex-2 min-w-0">
+                  <div className="lg:flex-2 min-w-0">
                     <div><span className="font-medium">Buy now price: </span>{formatCurrency(product.buy_now_price?.toString())}</div>
                     <div><span className="font-medium">My bid: </span>{formatCurrency(product.bid_amount?.toString())}</div>
                     <div className='font-bold text-base text-[#8D0000]'><span className="text-black font-medium">Status: </span>{product.status?.toString().toUpperCase()}</div>
                   </div>
-                  <div className="md:flex-1 min-w-0 flex flex-col md:items-end">
+                  <div className="lg:flex-1 min-w-0 flex flex-col lg:items-end">
                     <div><span className="font-medium">Bid count: </span>{product.bid_count?.toString() ?? 0}</div>
                     <div><span className="font-medium">Reviews count: </span>{product.reviews_count?.toString()}</div>
                   </div>
@@ -179,7 +179,7 @@ function WonTab({profile} : {profile: Profile}) {
             >
               {product.seller.name}
             </Link>
-            <div className='flex flex-col md:items-center text-sm md:flex-row gap-5'> 
+            <div className='flex flex-col lg:items-center text-sm lg:flex-row gap-5'> 
               <Link
                 to={`/product/${product.product_id}`}
                 className="hover:text-[#8D0000] cursor-pointer w-50 h-full"
@@ -194,7 +194,7 @@ function WonTab({profile} : {profile: Profile}) {
                 />
               </Link>
               <div className="flex flex-col gap-2 flex-grow">
-                <div className="flex flex-col md:flex-row gap-2 md:items-center justify-between">
+                <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-between">
                   <div className='flex flex-col'>
                     <Link
                       to={`/product/${product.product_id}`}
@@ -207,25 +207,25 @@ function WonTab({profile} : {profile: Profile}) {
                       {`${product.category.category_name_level_1} > ${product.category.category_name_level_2}`}
                     </Link>
                   </div>
-                  <div ><span className='font-medium'>Ended at: </span> {product.end_time}</div>
+                  <div ><span className='font-medium'>Ended at: </span> {formatDate(product.end_time)}</div>
                 </div>
-                <div className="flex flex flex-col md:flex-row gap-2 md:gap-5">
-                  <div className="md:flex-2 min-w-0">
+                <div className="flex flex flex-col lg:flex-row gap-2 lg:gap-5">
+                  <div className="lg:flex-2 min-w-0">
                     <div><span className="font-medium">Final price: </span>{formatCurrency(product.order.final_price?.toString())}</div>
-                    <div><span className="font-medium">Created at: </span>{product.order.created_at?.toString()}</div>
+                    <div><span className="font-medium">Created at: </span>{formatDate(product.order.created_at)}</div>
                   </div>
-                  <div className="md:flex-2 min-w-0">
+                  <div className="lg:flex-2 min-w-0">
                     <div className="text-black font-medium">Order status: </div>
                     <div className='font-bold text-base text-[#8D0000]'>{product.order.status.toString().toUpperCase()}</div>
                   </div>
-                  <div className="md:flex-1 min-w-0 flex flex-col md:items-end">
+                  <div className="lg:flex-1 min-w-0 flex flex-col lg:items-end">
                     <div><span className="font-medium">Bid count: </span>{product.bid_count?.toString() ?? 0}</div>
                   </div>
                 </div>
               </div>
             </div>
             
-            {<ReviewBox order_id={product.order.order_id} review={product.review} role={profile.role} autoComment={false} orderStatus={'completed'}/>}
+            <ReviewBox order_id={product.order.order_id} review={product.review} role={profile.role} autoComment={false} orderStatus={product.order.status}/>
           </div>
         );
       })}
@@ -387,13 +387,13 @@ function WatchlistTab(){
 }
 
 function ReviewsTab() {
-  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const fetchReviews = async() => {
     try {
       setLoading(true);
-      const res = await fetch('/api/profile/reviews', {
+      const res = await fetch(`/api/profile/reviews`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -428,27 +428,30 @@ function ReviewsTab() {
             key={index}
             className="
               hover:scale-101 transition duration-150 ease-in-out
-              flex flex-col bg-white p-5 gap-5
+              flex flex-col bg-white p-2 gap-1
               rounded-sm ring ring-gray-200 shadow-sm shadow-black-300
             "
           >
             <div className="flex flex-row justify-between">
-              <div className="text-lg font-bold">{review.reviewer.name}</div>
-              <div className="text-gray-400">{review.created_at}</div>
+              <Link 
+                to={`/profile/${review.reviewer.user_id}`}
+                className='w-fit hover:text-[#8D0000] cursor-pointer text-lg font-bold'
+              >
+                {review.reviewer.name}
+              </Link>
+              <div className="text-gray-400">{formatDate(review.created_at)}</div>
             </div>
-            <div className="flex flex-row gap-10">
+            <div className='flex flex-col'>
               <Link
                 to={`/product/${review.product.product_id}`}
-                className="hover:text-[#8D0000] cursor-pointer flex-2 font-medium"
+                className="w-fit hover:text-[#8D0000] cursor-pointer text-lg font-bold"
               >
                 {review.product.product_name}
               </Link>
-              <div className="flex-5">{review.comment}</div>
-              {review.is_positive ? (
-                <ThumbsUp className="flex-1" color="#8D0000" />
-              ) : (
-                <ThumbsDown className="flex-1" color="#8D0000" />
-              )}
+
+              <Link to={`/products/${review.product.category.category_name_level_1}/${review.product.category.category_name_level_2}`} className="text-md text-gray-400">
+                {`${review.product.category.category_name_level_1} > ${review.product.category.category_name_level_2}`}
+              </Link>
             </div>
           </div>
         );
@@ -675,7 +678,7 @@ function ProductsWithWinnerTab({profile} : {profile: Profile}) {
               rounded-sm ring ring-gray-200 shadow-sm shadow-black-300
             `}
           >
-            <div className='flex flex-col md:items-center text-sm md:flex-row gap-5'> 
+            <div className='flex flex-col lg:items-center text-sm lg:flex-row gap-5'> 
               <Link
                 to={`/product/${product.product_id}`}
                 className="hover:text-[#8D0000] cursor-pointer w-50 h-full"
@@ -690,7 +693,7 @@ function ProductsWithWinnerTab({profile} : {profile: Profile}) {
                 />
               </Link>
               <div className="flex flex-col gap-2 flex-grow">
-                <div className="flex flex-col md:flex-row gap-2 md:items-center justify-between">
+                <div className="flex flex-col lg:flex-row gap-2 lg:items-center justify-between">
                   <div className='flex flex-col'>
                     <Link
                       to={`/product/${product.product_id}`}
@@ -705,29 +708,29 @@ function ProductsWithWinnerTab({profile} : {profile: Profile}) {
                   </div>
                   <div ><span className='font-medium'>Ended at: </span> {product.end_time}</div>
                 </div>
-                <div className="flex flex flex-col md:flex-row gap-2 md:gap-5">
-                  <div className="md:flex-2 min-w-0">
+                <div className="flex flex flex-col lg:flex-row gap-2 lg:gap-5">
+                  <div className="lg:flex-2 min-w-0">
                     <div><span className="font-medium">Final price: </span>{formatCurrency(product.current_price.toString())}</div>
-                    <div><span className="font-medium">Created at: </span>{product.order?.created_at}</div>
+                    <div><span className="font-medium">Created at: </span>{formatDate(product.order?.created_at)}</div>
                   </div>
-                  <div className="md:flex-2 min-w-0">
+                  <div className="lg:flex-2 min-w-0">
                     <div className="text-black font-medium">Order status: </div>
                     <div className='font-bold text-base text-[#8D0000]'>{product.order?.order_status.toString().toUpperCase()}</div>
                   </div>
-                  <div className="md:flex-1 min-w-0 flex flex-col md:items-end">
+                  <div className="lg:flex-1 min-w-0 flex flex-col lg:items-end">
                     <div><span className="font-medium">Bid count: </span>{product.bid_count?.toString() ?? 0}</div>
                   </div>
                 </div>
               </div>
             </div>
             
-            {<ReviewBox 
+            <ReviewBox 
               order_id={product.order?.order_id||""}
               review={product.order?.my_review || null}
               role={profile.role} autoComment={true} 
               orderStatus={product.order?.order_status || 'completed'} 
-              onCancelSuccess={() => handleOrderCancelled(product.product_id)}/>
-            }
+              onCancelSuccess={() => handleOrderCancelled(product.product_id)}
+            />
           </div>
         );
       })}
@@ -785,7 +788,7 @@ export default function UserTab( { profile }: { profile: Profile } ) {
         })}
       </div>
 
-      <div className="mt-5 h-full bg-gray-100 p-5 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
+      <div className="mt-5 h-full bg-gray-100 p-2 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
         {renderTab()}
       </div>
     </div>

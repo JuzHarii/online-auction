@@ -291,7 +291,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
    }
  
    // ---------- FINAL COMPLETED VIEW ----------
-   if (reviewSubmitted) {
+   if (reviewSubmitted && order.status === 'completed') {
      return (
        <div className="container mx-auto py-8 px-4">
          <div className="max-w-4xl mx-auto border rounded-xl bg-white shadow-lg">
