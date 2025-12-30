@@ -396,7 +396,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                       {reviewSubmitted && !isEditingReview && (
                         <button 
                           onClick={() => setIsEditingReview(true)}
-                          className="text-sm font-medium text-blue-700 hover:text-blue-900 underline"
+                          className="text-sm font-medium text-[#8D0000] underline"
                         >
                           Edit Review
                         </button>
@@ -406,7 +406,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                     {reviewSubmitted && !isEditingReview ? (
                       <div className="bg-white p-4 rounded border">
                         <div className="flex items-center gap-2 mb-2">
-                          {likeStatus === 'like' ? <ThumbsUp className="h-4 w-4 text-green-600" /> : <ThumbsDown className="h-4 w-4 text-red-600" />}
+                          {likeStatus === 'like' ? <ThumbsUp className="h-4 w-4 text-[#8D0000]" /> : <ThumbsDown className="h-4 w-4 text-red-600" />}
                           <span className="capitalize font-bold text-sm">{likeStatus}</span>
                         </div>
                         <p className="text-gray-600 text-sm italic">"{review || 'No comment provided.'}"</p>
@@ -439,7 +439,7 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                             {loadingSubmit ? (
                               <ClipLoader size={20} color='white' />
                             ) : (
-                              reviewSubmitted ? 'Update Review' : 'Submit Review'
+                              'Submit Review'
                             )}
                           </button>
                           {isEditingReview && (

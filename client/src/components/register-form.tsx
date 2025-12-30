@@ -71,7 +71,7 @@ export default function Register() {
       const address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
       const token = recaptchaRef.current?.getValue();
       if (!token) {
-        alert('Vui lòng xác thực reCAPTCHA');
+        alert('Verify reCAPTCHA');
         return;
       }
 
