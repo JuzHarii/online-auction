@@ -204,6 +204,8 @@ model Reviews {
   reviewee               User     @relation("Reviewee", fields: [reviewee_id], references: [user_id], onDelete: Cascade)
   order_as_seller_review Order?   @relation("SellerReview")
   order_as_buyer_review  Order?   @relation("BuyerReview")
+
+  @@unique([product_id, reviewer_id, reviewee_id])
 }
 
 model DeniedBidders {

@@ -8,6 +8,7 @@ import { Readable } from 'stream'; // <--- 1. Import cái này
 import { Prisma } from '@prisma/client';
 
 import * as mailService from '../services/mail.service.ts';
+import { getOrderByProductID } from '../services/payment.services.ts'
 
 export const uploadProducts = async (req: Request, res: Response) => {
   try {
@@ -255,8 +256,46 @@ export const getProduct = async (req: Request, res: Response) => {
       },
     });
 
+
     if (!productData) {
       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    let orderId = null
+    const isSeller = user ? user.id === productData.seller.user_id : false
+    const isWinner = user ? user.id === productData.current_highest_bidder_id : false
+    if (productData.end_time < new Date() && (isSeller || isWinner)) {
+      orderId = await getOrderByProductID(Number(productData.product_id))
+      console.log("order id", orderId)
+    }
+    
+    if (orderId) {
+      const response = {
+        id: productData.product_id,
+        title: productData.name,
+        postedDate: null,
+        endsIn: null,
+        orderId: orderId,
+        currentBid: null,
+        bidsPlaced: null,
+        buyNowPrice: null,
+        minBidStep: null,
+        images:
+        null,
+        details: null,
+        description: null,
+        conditionText: null,
+        seller: null,
+        topBidder:null,
+        qa: null,
+        
+        // Flags
+        isSeller: isSeller,
+        isWatchlisted: null, // NEW FIELD
+
+        relatedProducts: null,
+      };
+        return res.send(JSON.stringify(response, bigIntReplacer));
     }
 
     // 2. NEW: Check if product is in User's Watchlist
@@ -345,7 +384,8 @@ export const getProduct = async (req: Request, res: Response) => {
         day: 'numeric',
         year: 'numeric',
       }),
-      endsIn: productData.end_time,
+      endsIn: productData.end_time, 
+      orderId: orderId,
       currentBid: Number(productData.current_price),
       bidsPlaced: productData.bid_count,
       buyNowPrice: productData.buy_now_price ? Number(productData.buy_now_price) : 0,
@@ -393,7 +433,7 @@ export const getProduct = async (req: Request, res: Response) => {
       })),
 
       // Flags
-      isSeller: user ? user.id === productData.seller.user_id : false,
+      isSeller: isSeller,
       isWatchlisted: isWatchlisted, // NEW FIELD
 
       relatedProducts: relatedProducts,
