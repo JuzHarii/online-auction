@@ -276,6 +276,18 @@ router.get(
 );
 
 router.post(
+  '/review/create',
+  authController.getAuthentication,
+  ReviewController.create
+),
+
+router.put(
+  '/review/update',
+  authController.getAuthentication,
+  ReviewController.update
+),
+
+router.post(
   '/rate',
   authController.getAuthentication,
   ReviewController.rate

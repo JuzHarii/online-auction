@@ -31,7 +31,7 @@ export const ReviewController = {
 
   update: async(req: Request, res: Response) => {
     try {
-      const { review_id, comment, is_positive } = req.body as { review_id: string, comment: string, is_positive: boolean };
+      const { review_id, comment, is_positive } = req.body as { review_id: string, comment: string | null, is_positive: boolean };
 
       if (is_positive === null) return res.status(400).json(errorResponse("Missed input data"));
 

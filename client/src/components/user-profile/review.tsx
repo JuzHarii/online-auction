@@ -26,7 +26,7 @@ export default function ReviewBox(
 ) {
   const [comment, setComment] = useState(review?.comment || "");
   const [isPositive, setIsPositive] = useState<boolean | null>(review ? review.is_positive : null);
-  const [isEditting, setIsEditting] = useState(!review && orderStatus ==='completed')
+  const [isReviewing, setIsReviewing] = useState(false)
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -36,29 +36,29 @@ export default function ReviewBox(
     }
   }, [review]);
 
-  const rate = async(rateValue: boolean) => {
-    try {
-      const result = await fetch('/api/rate', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          order_id: order_id,
-          review_id: review ? review.review_id : null,
-          is_positive: rateValue,
-          role: role
-        }),
-      });
+  // const rate = async(rateValue: boolean) => {
+  //   try {
+  //     const result = await fetch('/api/rate', {
+  //       method: 'POST',
+  //       credentials: 'include',
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: JSON.stringify({
+  //         order_id: order_id,
+  //         review_id: review ? review.review_id : null,
+  //         is_positive: rateValue,
+  //         role: role
+  //       }),
+  //     });
 
-      const jsonResult = await result.json();
-      if (!result.ok) throw new Error(jsonResult.message);
+  //     const jsonResult = await result.json();
+  //     if (!result.ok) throw new Error(jsonResult.message);
       
-    } catch(e) {
-      console.log(e);
-    }
-  }
+  //   } catch(e) {
+  //     console.log(e);
+  //   }
+  // }
 
-  const sendComment = async() => {
+  const submitReview = async() => {
     try {
       setError("");
       if (comment == "") {
@@ -70,22 +70,40 @@ export default function ReviewBox(
         setError("Please provide rating");
         return
       }
-      console.log(comment)
-      const result = await fetch(`/api/comment`, {
-        method: 'POST',
+      
+      if (!review) {
+        const result = await fetch(`/api/review/create`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            order_id: order_id,
+            comment: comment,
+            is_positive: isPositive,
+            role: role
+          }),
+        })
+
+        const jsonResult = await result.json();
+        if (!result.ok) throw new Error(jsonResult.message);
+        setIsReviewing(false)
+        return
+      }
+
+      const result = await fetch(`/api/review/update`, {
+        method: 'PUT',
         credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          order_id: order_id,
           review_id: review?.review_id,
           comment: comment,
           is_positive: isPositive,
-          role: role
         }),
       })
 
       const jsonResult = await result.json();
       if (!result.ok) throw new Error(jsonResult.message);
+      setIsReviewing(false)
       
     } catch(e) {
       console.log(e);
@@ -109,57 +127,81 @@ export default function ReviewBox(
   }
 
   if (orderStatus === 'completed')
-  return (
-    <div className="text-sm rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
-      <div className="flex flex-row justfiy-between gap-3">
-        <div className="w-full">
-          <label className={`block text-sm font-medium mb-2`}>Comment</label>
-          {review?.comment && <p className="my-2">{review.comment}</p>}
-          <textarea
-            value={comment}
-            disabled={orderStatus !== 'completed' || !isEditting}
-            onChange={(e) => setComment(e.target.value)}
-            className={`w-full p-2 border rounded ${isEditting ? 'text-black' : 'text-gray-300'}`}
-            rows={4}
-          />
-        </div>
+    return (
+      <div className="mt-2">
+        {isReviewing 
+          ?  <div className="text-sm rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 p-2">
+          <div className="flex flex-col justfiy-between gap-3">
+            <div className="flex gap-5 items-center">
+              <label className={`block text-base font-medium`}>My Review</label>
+              <div className="flex gap-2 items-center">
+                <ThumbsUp
+                  type="button"
+                  onClick={() => setIsPositive(true)}
+                  className={`w-5 h-5 hover:scale-105 text-[#8D0000] ${isPositive !== null && isPositive ? 'fill-[#8D0000]' : ''}`}
+                />
+                <ThumbsDown
+                  type="button"
+                  onClick={() => setIsPositive(false)}
+                  className={`w-5 h-5 hover:scale-105 text-[#8D0000] ${isPositive !== null && !isPositive ? 'fill-[#8D0000]' : ''}`}
+                />
+              </div>
+            </div>
+            <textarea
+              value={comment}
+              disabled={orderStatus !== 'completed' || !isReviewing}
+              onChange={(e) => setComment(e.target.value)}
+              className={`w-full bg-gray-100 p-2 border rounded ${isReviewing ? 'text-black' : 'text-gray-300'}`}
+              rows={4}
+            />
+            <div className="flex flex-col gap-2 items-center">
+              <button
+                onClick={submitReview}
+                disabled = {!isReviewing}
+                className={`w-full px-4 py-1 rounded text-white ${isReviewing ? 'bg-[#8D0000]  hover:border hover:bg-white hover:text-[#8D0000]' : 'bg-gray-400'}`}
+              >
+                Submit
+              </button>
 
-        <div className="flex flex-col items-center">
-          <label className="block text-sm font-medium mb-2">Rating</label>
-          <div className="flex gap-4 mb-3">
-            <ThumbsUp
-              type="button"
-              onClick={async () => {
-                setIsPositive(true),
-                rate(true)
-              }}
-              className={`hover:scale-105 text-[#8D0000] ${isPositive !== null && isPositive ? 'fill-[#8D0000]' : ''}`}
-            />
-            <ThumbsDown
-              type="button"
-              onClick={async () => {
-                setIsPositive(false),
-                rate(false)
-              }}
-              className={`hover:scale-105 text-[#8D0000] ${isPositive !== null && !isPositive ? 'fill-[#8D0000]' : ''}`}
-            />
+              <button
+                onClick={() => setIsReviewing(false)}
+                className={`w-full px-4 py-1 rounded text-white bg-black hover:border hover:bg-white hover:text-black`}
+              >
+                Cancel
+              </button>
+            </div>
+            
+          </div>
+          {error && <div className="text-[#8D0000] mt-2">{error}</div>}
+        </div>
+        :
+        <div>
+          <div className="flex gap-5 items-center">
+            <label className={`block text-base font-medium`}>My Review</label>
+            <div className="flex gap-2 items-center">
+              <ThumbsUp
+                className={`w-5 h-5 text-[#8D0000] ${isPositive !== null && isPositive ? 'fill-[#8D0000]' : ''}`}
+              />
+              <ThumbsDown
+                className={`w-5 h-5 text-[#8D0000] ${isPositive !== null && !isPositive ? 'fill-[#8D0000]' : ''}`}
+              />
+            </div>
+
           </div>
 
+          {review && <p className="my-2 text-sm p-1 w-full bg-white p-2 border border-gray-300 rounded">{comment}</p>}
+
           <button
-            onClick={sendComment}
-            disabled = {!isEditting}
-            className={`w-full px-4 py-1 rounded text-white ${isEditting ? 'bg-black  hover:border hover:bg-white hover:text-black' : 'bg-gray-400'}`}
+            onClick={() => setIsReviewing(true)}
+            className={`w-full px-4 py-1 rounded text-white bg-black hover:border hover:bg-white hover:text-black hover:scale-101`}
           >
-            Submit
+            Review
           </button>
-
-
-        </div>
-        
+        </div>}
       </div>
-    {error && <div className="text-[#8D0000] mt-2">{error}</div>}
-    </div>
-  );
+
+
+    );
 
   if (orderStatus === 'pending_payment' && autoComment)
     return(
