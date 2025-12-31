@@ -213,7 +213,7 @@ export default function ReviewBox(
     return(
       <button
         onClick={cancelOrder}
-        className="mt-1 block w-fit self-end px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
+        className="mt-1 w-fit self-end px-4 py-1 bg-black text-white rounded hover:border hover:bg-white hover:text-black"
       >
         Cancel
       </button>

@@ -189,10 +189,10 @@ export interface CancelOrderResponse {
 export const getMyProfile = async (req: Request, res: Response) => {
   try {
     const user_id = res.locals.user.id;
-    if (!user_id) return res.status(401).json({ message: 'Unauthorized' });
+    if (!user_id) return res.status(401).json(errorResponse('Unauthorized'));
 
     const user = await UserServices.getUser(user_id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json(errorResponse("User not found in db"));
 
     const payload: Profile = {
       role: user.role,
@@ -206,9 +206,9 @@ export const getMyProfile = async (req: Request, res: Response) => {
     };
 
     res.status(200).json(successResponse(user, 'Get profile successfully'));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err:any) {
+    console.error(err.message);
+    res.status(500).json(errorResponse(err.message));
   }
 };
 
