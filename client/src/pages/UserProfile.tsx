@@ -14,9 +14,11 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const { user, setUser } = useUser();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [signoutLoading, setSignoutLoading] = useState(false);
 
   const handleLogout = async () => {
     try {
+      setSignoutLoading(true);
       const res = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
@@ -25,6 +27,7 @@ export default function UserProfile() {
       const result = await res.json();
       if (res.ok && result.isSuccess) {
         setUser(null);
+        setSignoutLoading(false);
       }
     } catch (e) {}
   };
@@ -60,78 +63,69 @@ export default function UserProfile() {
   if (!profile) return <div className="text-center py-32 text-red-500">Error</div>;
 
   return (
-    <div className="w-[90%] max-w-8xl justify-between mx-auto">
+    <div className="w-[90%] max-w-7xl mx-auto pb-10">
       {/* TITLE */}
-      <h1 className="text-center text-4xl font-bold text-[#8D0000] mt-10">
+      <h1 className="text-center text-3xl md:text-4xl font-bold text-[#8D0000] mt-8 md:mt-10">
         Welcome, {profile.name}!
       </h1>
 
-      {/* DASHBOARD */}
-      {/* <div className="flex flex-col sm:flex-row gap-6 mx-auto mt-10">
-        <div className="flex-1 min-w-0 flex flex-col grow gap-2 px-6 py-3 ring ring-gray-200 rounded-sm shadow-sm shadow-stone-300">
-          <h2 className="text-xl font-bold">Total bids</h2>
-          <p className="text-3xl font-bold text-[#8D0000]">{profile.total_bids}</p>
-          <p>+{profile.bids_this_week} bids this week</p>
-        </div>
-        <div className="flex-1 min-w-0 flex flex-col grow gap-2 px-6 py-3 ring ring-gray-200 rounded-sm shadow-sm shadow-stone-300">
-          <h2 className="text-xl font-bold">Total wins</h2>
-          <p className="text-3xl font-bold text-[#8D0000]">{profile.total_wins}</p>
-          <p>Win rate: {profile.win_rate}%</p>
-        </div>
-        <div className="flex-1 min-w-0 flex flex-col grow gap-2 px-6 py-3 ring ring-gray-200 rounded-sm shadow-sm shadow-stone-300">
-          <h2 className="text-xl font-bold">Watchlist</h2>
-          <p className="text-3xl font-bold text-[#8D0000]">{profile.watchlist_count}</p>
-          <p>is following</p>
-        </div>
-        <div className="flex-1 min-w-0 flex flex-col grow gap-2 px-6 py-3 ring ring-gray-200 rounded-sm shadow-sm shadow-stone-300">
-          <h2 className="text-xl font-bold">Rating</h2>
-          <p className="text-3xl font-bold text-[#8D0000]">{profile.rating}</p>
-          <p>{profile.rating_label}</p>
-        </div>
-      </div> */}
-
-      {/* PROFLE INFO */}
-
-      <div className="my-10 flex flex-col md:flex-row gap-5">
-        {/* PROFILE CARD - LEFT */}
-        <div className="max-w-2xl flex-1 min-w-0 px-5 pt-10 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
-          <div className="flex flex-row items-center gap-3 mb-5">
-            <div className="bg-[#FAE5E5] rounded-full w-10 h-10 flex items-center justify-center p-1">
-              <User2 className="fill-[#8D0000] stroke-none w-full h-full" />
+      {/* MAIN LAYOUT: Flex Column on Mobile, Flex Row on Desktop */}
+      <div className="my-8 flex flex-col lg:flex-row gap-6 md:gap-8 items-start">
+        
+        {/* --- LEFT SIDEBAR (PROFILE CARD) --- */}
+        <div className="
+          w-full lg:w-[350px] lg:shrink-0
+          bg-white rounded-md border border-gray-200 
+          shadow-sm shadow-gray-300 p-5
+          self-start
+        ">
+          
+          {/* 1. Header: Avatar + Name */}
+          <div className="flex flex-row items-center gap-4 mb-6">
+            <div className="bg-[#FAE5E5] rounded-full w-14 h-14 shrink-0 flex items-center justify-center p-2">
+              <User2 className="text-[#8D0000] w-full h-full" />
             </div>
-            <div className="min-w-0">
-              <h3 className="text-lg font-bold truncate">{profile.name}</h3>
-              <p className="text-base text-gray-300 truncate">{profile.email}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xl font-bold truncate text-gray-800" title={profile.name}>
+                {profile.name}
+              </h3>
+              <p className="text-sm text-gray-500 truncate" title={profile.email}>
+                {profile.email}
+              </p>
             </div>
           </div>
 
-          <hr className="border-[#8D0000]" />
+          <hr className="border-gray-200 my-4" />
 
-          <div className="my-5 text-base grid grid-cols-5 gap-2 min-w-0">
-            <p className="font-bold col-span-2 col-start-1">Role</p>
-            <p className="text-right col-span-3 col-start-3">{profile.role}</p>
-            <p className="font-bold col-span-2 col-start-1">Join date</p>
-            <p className="text-right col-span-3 col-start-3">
+          {/* 2. Info Grid */}
+          <div className="grid grid-cols-2 gap-y-3 text-sm md:text-base text-gray-700 mb-6">
+            <span className="font-semibold text-gray-500">Role</span>
+            <span className="text-right font-medium capitalize">{profile.role}</span>
+            
+            <span className="font-semibold text-gray-500">Join date</span>
+            <span className="text-right font-medium">
               {new Date(profile.created_at).toLocaleDateString('vi-VN')}
-            </p>
+            </span>
           </div>
 
-          <div className="flex flex-col gap-3 text-base my-10">
-            {/* Seller Status Display */}
-            {profile.role === 'seller' && (
-              <div className="mb-3">
-                <SellerStatus />
-              </div>
-            )}
+          {/* 3. Seller Status (Full width) */}
+          {profile.role === 'seller' && (
+            <div className="mb-4">
+              <SellerStatus />
+            </div>
+          )}
 
+          {/* 4. Action Buttons Group */}
+          {/* Mobile: Grid 2 cột | Desktop: Xếp dọc */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col gap-3">
+            
             <button
               onClick={() => setAction('edit-profile')}
               className="
-                cursor-pointer bg-[#8D0000] 
-                hover:bg-[#760000] hover:scale-101
-                active:scale-95 
-                transition-all duration-200 hover:shadow-md
-                text-white rounded-sm shadow-sm shadow-stone-300 font-medium p-1
+                col-span-1
+                py-2 px-4 rounded font-medium transition-all duration-200
+                bg-[#8D0000] text-white
+                hover:bg-[#760000] hover:shadow-md active:scale-95
               "
             >
               My Profile
@@ -140,12 +134,11 @@ export default function UserProfile() {
             <button
               onClick={() => setAction('change-password')}
               className="
-              cursor-pointer bg-black text-white
-              hover:bg-[#5C5C5C] hover:scale-101
-              active:scale-95 
-              transition-all duration-200 hover:shadow-md
-              rounded-sm shadow-sm shadow-stone-300 font-medium p-1
-            "
+                col-span-1
+                py-2 px-4 rounded font-medium transition-all duration-200
+                bg-black text-white
+                hover:bg-[#333] hover:shadow-md active:scale-95
+              "
             >
               Change password
             </button>
@@ -154,12 +147,11 @@ export default function UserProfile() {
               <button
                 onClick={() => setAction('request-role')}
                 className="
-              cursor-pointer bg-gray-300 text-black-800
-              hover:bg-gray-400 hover:scale-101
-              active:scale-95 
-              transition-all duration-200 hover:shadow-md 
-              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-1
-            "
+                  col-span-1 sm:col-span-1 lg:col-span-1
+                  py-2 px-4 rounded font-medium transition-all duration-200
+                  bg-gray-200 text-gray-800
+                  hover:bg-gray-300 hover:shadow active:scale-95
+                "
               >
                 Let me sell
               </button>
@@ -167,38 +159,38 @@ export default function UserProfile() {
               <Link
                 to="/upload"
                 className="
-              text-center
-              cursor-pointer bg-yellow-300 text-black-800
-              hover:bg-yellow-400 hover:scale-101
-              active:scale-95 
-              transition-all duration-200 hover:shadow-md 
-              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 font-medium p-1
-            "
+                  col-span-1 sm:col-span-1 lg:col-span-1
+                  flex items-center justify-center
+                  py-2 px-4 rounded font-medium transition-all duration-200
+                  bg-gray-200 text-gray-800
+                  hover:bg-gray-300 hover:shadow active:scale-95
+                "
               >
                 Add product
               </Link>
             )}
 
             <button
-              className="
-                cursor-pointer bg-white text-[#8D0000]
-                hover:bg-[#F0EEEE] hover:scale-101
-                active:scale-95 
-                transition-all duration-200 hover:shadow-md 
-                rounded-sm ring ring-gray-100 shadow-sm shadow-black-300 font-medium p-1
-              "
+              disabled={signoutLoading}
               onClick={() => {
                 handleLogout();
                 navigate('/');
               }}
+              className={`
+                col-span-1 sm:col-span-1 lg:col-span-1
+                py-2 px-4 rounded font-medium transition-all duration-200 border border-gray-200
+                ${signoutLoading ? 'bg-gray-200 text-gray-500' : 'bg-white text-[#8D0000]'}
+                hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm active:scale-95
+              `}
             >
-              Sign out
+              {signoutLoading ? 'Signing out...' : 'Sign out'}
             </button>
           </div>
         </div>
 
-        {/* TABS */}
+        {/* --- RIGHT CONTENT (TABS) --- */}
         <UserAction profile={profile} action={action} setAction={setAction} />
+
       </div>
     </div>
   );

@@ -9,3 +9,26 @@ input::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
 }
+
+@layer utilities {
+  /* Tên class tùy bạn đặt, ví dụ: .scrollbar-custom */
+  .scrollbar-custom::-webkit-scrollbar {
+
+    height: 4px;
+    width: 8px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: #dddddd; 
+    border-radius: 4px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: #818181;
+    border-radius: 4px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: #9b9b9b;
+  }
+}
