@@ -4,7 +4,7 @@ import { errorResponse, successResponse } from '../utils/response.ts';
 import * as productService from '../services/product.services.ts';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { BUCKET_NAME, s3Client } from '../config/s3.ts';
-import { Readable } from 'stream'; // <--- 1. Import cái này
+import { Readable } from 'stream';
 import { Prisma } from '@prisma/client';
 
 import * as mailService from '../services/mail.service.ts';
@@ -92,6 +92,7 @@ export const getProductImage = async (req: Request, res: Response) => {
 
 export const getProductsEndest = async (req: Request, res: Response) => {
   try {
+    const user = res.locals.user;
     const nearestEndingProducts = await db.prisma.product.findMany({
       where: {
         end_time: {
@@ -113,6 +114,20 @@ export const getProductsEndest = async (req: Request, res: Response) => {
       },
     });
 
+    let watchlistedIds = new Set<string>();
+    if (user) {
+      const watchlistEntries = await db.prisma.watchlist.findMany({
+        where: {
+          user_id: user.id,
+          product_id: {
+            in: nearestEndingProducts.map((p) => p.product_id),
+          },
+        },
+        select: { product_id: true },
+      });
+      watchlistEntries.forEach((w) => watchlistedIds.add(w.product_id.toString()));
+    }
+
     const formattedProducts = nearestEndingProducts.map((product) => {
       return {
         id: product.product_id.toString(),
@@ -124,6 +139,8 @@ export const getProductsEndest = async (req: Request, res: Response) => {
         created_at: product.created_at,
         highest_bidder_name: product.current_highest_bidder?.name || null,
         image_url: product.images[0]?.image_url || null,
+        isWatchlisted: watchlistedIds.has(product.product_id.toString()),
+        isSeller: user ? product.seller_id === user.id : false,
       };
     });
 
@@ -135,6 +152,7 @@ export const getProductsEndest = async (req: Request, res: Response) => {
 
 export const getTopBiddedProducts = async (req: Request, res: Response) => {
   try {
+    const user = res.locals.user;
     const topBiddedProducts = await db.prisma.product.findMany({
       where: {
         end_time: {
@@ -156,6 +174,20 @@ export const getTopBiddedProducts = async (req: Request, res: Response) => {
       },
     });
 
+    let watchlistedIds = new Set<string>();
+    if (user) {
+      const watchlistEntries = await db.prisma.watchlist.findMany({
+        where: {
+          user_id: user.id,
+          product_id: {
+            in: topBiddedProducts.map((p) => p.product_id),
+          },
+        },
+        select: { product_id: true },
+      });
+      watchlistEntries.forEach((w) => watchlistedIds.add(w.product_id.toString()));
+    }
+
     const formattedProducts = topBiddedProducts.map((product) => {
       return {
         id: product.product_id.toString(),
@@ -167,6 +199,8 @@ export const getTopBiddedProducts = async (req: Request, res: Response) => {
         created_at: product.created_at,
         highest_bidder_name: product.current_highest_bidder?.name || null,
         image_url: product.images[0]?.image_url || null,
+        isWatchlisted: watchlistedIds.has(product.product_id.toString()),
+        isSeller: user ? product.seller_id === user.id : false,
       };
     });
 
@@ -178,6 +212,7 @@ export const getTopBiddedProducts = async (req: Request, res: Response) => {
 
 export const getHighPriceProducts = async (req: Request, res: Response) => {
   try {
+    const user = res.locals.user;
     const highPriceProducts = await db.prisma.product.findMany({
       where: {
         end_time: {
@@ -199,6 +234,20 @@ export const getHighPriceProducts = async (req: Request, res: Response) => {
       },
     });
 
+    let watchlistedIds = new Set<string>();
+    if (user) {
+      const watchlistEntries = await db.prisma.watchlist.findMany({
+        where: {
+          user_id: user.id,
+          product_id: {
+            in: highPriceProducts.map((p) => p.product_id),
+          },
+        },
+        select: { product_id: true },
+      });
+      watchlistEntries.forEach((w) => watchlistedIds.add(w.product_id.toString()));
+    }
+
     const formattedProducts = highPriceProducts.map((product) => {
       return {
         id: product.product_id.toString(),
@@ -210,6 +259,8 @@ export const getHighPriceProducts = async (req: Request, res: Response) => {
         created_at: product.created_at,
         highest_bidder_name: product.current_highest_bidder?.name || null,
         image_url: product.images[0]?.image_url || null,
+        isWatchlisted: watchlistedIds.has(product.product_id.toString()),
+        isSeller: user ? product.seller_id === user.id : false,
       };
     });
 
@@ -237,11 +288,10 @@ export const getProduct = async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = res.locals.user;
 
-    // 1. Fetch Product Data
     const productData = await db.prisma.product.findUnique({
       where: { product_id: BigInt(id) },
       include: {
-        seller: { select: { user_id: true, name: true, plus_review: true, minus_review: true } }, // seller info
+        seller: { select: { user_id: true, name: true, plus_review: true, minus_review: true } },
         category: true,
         current_highest_bidder: { select: { name: true, plus_review: true, minus_review: true } },
         images: true,
@@ -289,32 +339,27 @@ export const getProduct = async (req: Request, res: Response) => {
         topBidder:null,
         qa: null,
         
-        // Flags
         isSeller: isSeller,
-        isWatchlisted: null, // NEW FIELD
+        isWatchlisted: null,
 
         relatedProducts: null,
       };
         return res.send(JSON.stringify(response, bigIntReplacer));
     }
 
-    // 2. NEW: Check if product is in User's Watchlist
-    // We only check this if a user is logged in
     let isWatchlisted = false;
     if (user) {
       const watchlistEntry = await db.prisma.watchlist.findUnique({
         where: {
-          // Prisma generates this compound key name from @@id([user_id, product_id])
           user_id_product_id: {
-            user_id: user.id, // Assuming res.locals.user.id holds the UUID
+            user_id: user.id,
             product_id: productData.product_id,
           },
         },
       });
-      isWatchlisted = !!watchlistEntry; // Convert object (or null) to boolean
+      isWatchlisted = !!watchlistEntry;
     }
 
-    // 3. Take 5 related products
     const relatedProductsRaw = await db.prisma.product.findMany({
       where: {
         category_id: productData.category_id,
@@ -347,7 +392,6 @@ export const getProduct = async (req: Request, res: Response) => {
       const timeLeft = days > 0 ? `${days} day${days > 1 ? 's' : ''} left` : `${hours}h left`;
 
       return {
-        // follow the "MemoProductCard" structure
         id: p.product_id.toString(),
         name: p.name,
         bid_count: p.bid_count,
@@ -432,9 +476,8 @@ export const getProduct = async (req: Request, res: Response) => {
         time: new Date(qa.question_time).toLocaleDateString(),
       })),
 
-      // Flags
       isSeller: isSeller,
-      isWatchlisted: isWatchlisted, // NEW FIELD
+      isWatchlisted: isWatchlisted,
 
       relatedProducts: relatedProducts,
     };
@@ -462,6 +505,7 @@ type SortOrder = 'asc' | 'desc';
 
 export const getProductsLV = async (req: Request, res: Response) => {
   try {
+    const user = res.locals.user;
     const { level1, level2 } = req.params;
     const sortQuery = req.query.sort as SortField | undefined;
     const orderQuery = req.query.order as SortOrder | undefined;
@@ -511,6 +555,19 @@ export const getProductsLV = async (req: Request, res: Response) => {
         },
       },
     });
+    let watchlistedIds = new Set<string>();
+    if (user) {
+      const watchlistEntries = await db.prisma.watchlist.findMany({
+        where: {
+          user_id: user.id,
+          product_id: {
+            in: products.map((p) => p.product_id),
+          },
+        },
+        select: { product_id: true },
+      });
+      watchlistEntries.forEach((w) => watchlistedIds.add(w.product_id.toString()));
+    }
     const formattedProducts = products.map((product) => {
       return {
         id: String(product.product_id),
@@ -522,6 +579,8 @@ export const getProductsLV = async (req: Request, res: Response) => {
         created_at: product.created_at,
         highest_bidder_name: product.current_highest_bidder?.name || null,
         image_url: product.images[0]?.image_url || null,
+        isWatchlisted: watchlistedIds.has(product.product_id.toString()),
+        isSeller: user ? product.seller_id === user.id : false,
       };
     });
 
@@ -566,12 +625,10 @@ export const handleBuyNow = async (req: Request, res: Response) => {
     const buyerId = res.locals.user.id;
 
     await db.prisma.$transaction(async (tx) => {
-      // 1. Fetch current product details for validation
       const product = await tx.product.findUnique({
         where: { product_id: BigInt(productId) },
       });
 
-      // Validation Checks
       if (!product) {
         throw new Error('Sản phẩm không tồn tại.');
       }
@@ -585,7 +642,6 @@ export const handleBuyNow = async (req: Request, res: Response) => {
         throw new Error('Bạn không thể mua sản phẩm do chính mình đăng bán.');
       }
 
-      // 2. Atomic Update (Concurrency Check)
       const updateResult = await tx.product.updateMany({
         where: {
           product_id: BigInt(productId),
@@ -604,15 +660,12 @@ export const handleBuyNow = async (req: Request, res: Response) => {
         throw new Error('Giao dịch thất bại: Sản phẩm đã được mua bởi người khác.');
       }
 
-      // 3. Create Order and History
       await Promise.all([
-        // FIX: Use upsert instead of create to handle the Unique Constraint error
         tx.order.upsert({
           where: {
-            product_id: BigInt(productId), // Finds existing order by product_id
+            product_id: BigInt(productId),
           },
           create: {
-            // If no order exists, create new
             product_id: BigInt(productId),
             buyer_id: buyerId,
             seller_id: product.seller_id,
@@ -620,12 +673,11 @@ export const handleBuyNow = async (req: Request, res: Response) => {
             status: 'pending_payment',
           },
           update: {
-            // If order exists (orphan data), overwrite it with new buyer info
             buyer_id: buyerId,
             seller_id: product.seller_id,
             final_price: product.buy_now_price,
             status: 'pending_payment',
-            created_at: new Date(), // Optional: reset creation time
+            created_at: new Date(),
           },
         }),
 
@@ -653,25 +705,20 @@ export const handleBuyNow = async (req: Request, res: Response) => {
   }
 };
 
-// QA section, a user can ask question about a product, seller gets email notification
 export const createProductQA = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { question } = req.body;
-    const user = res.locals.user; //asker
+    const user = res.locals.user;
 
-    // validate input
     if (!question) return res.status(400).json({ message: 'Question cannot be empty' });
 
-    /// find product
     const product = await db.prisma.product.findUnique({
       where: { product_id: BigInt(id) },
       include: { seller: { select: { email: true, name: true } } },
     });
-    // if no product found
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    /// save question to database
     await db.prisma.productQandA.create({
       data: {
         product_id: BigInt(id),
@@ -681,7 +728,6 @@ export const createProductQA = async (req: Request, res: Response) => {
       },
     });
 
-    // send email to seller
     const productLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/product/${id}`;
     mailService.sendNewQuestionEmail(product.seller.email, product.name, question, productLink);
 
@@ -696,12 +742,10 @@ export const replyProductQA = async (req: Request, res: Response) => {
   try {
     const { qaId } = req.params;
     const { answer } = req.body;
-    const user = res.locals.user; // current user (seller)
+    const user = res.locals.user;
 
-    // validate input
     if (!answer) return res.status(400).json({ message: 'Answer cannot be empty' });
 
-    // find question from database
     const qa = await db.prisma.productQandA.findUnique({
       where: { qa_id: BigInt(qaId) },
       include: {
@@ -709,15 +753,12 @@ export const replyProductQA = async (req: Request, res: Response) => {
       },
     });
 
-    // check if question exists
     if (!qa) return res.status(404).json({ message: 'Question not found' });
 
-    // check if current user is the seller of the product
     if (qa.product.seller_id !== user.id) {
       return res.status(403).json({ message: 'Unauthorized: You are not the seller' });
     }
 
-    // save answer to database
     await db.prisma.productQandA.update({
       where: { qa_id: BigInt(qaId) },
       data: {
@@ -726,7 +767,6 @@ export const replyProductQA = async (req: Request, res: Response) => {
       },
     });
 
-    // Send email
     const productData = await db.prisma.product.findUnique({
       where: { product_id: qa.product_id },
       include: {
@@ -740,7 +780,6 @@ export const replyProductQA = async (req: Request, res: Response) => {
     });
 
     if (productData) {
-      // Lay danh sach nguoi da hoi va da dat
       const questionerList = new Set<string>();
       productData.q_and_a.forEach((q) => questionerList.add(q.questioner.email));
       productData.bids.forEach((b) => questionerList.add(b.bidder.email));
@@ -768,17 +807,14 @@ export const replyProductQA = async (req: Request, res: Response) => {
   }
 };
 
-// --- full text search for products ---
 export const searchProducts = async (req: Request, res: Response) => {
   try {
     const { keyword, category } = req.query;
 
-    // phan trang (reuse)
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.max(1, parseInt(req.query.limit as string) || 10);
     const skip = (page - 1) * limit;
 
-    // sorting (reuse)
     const sort = req.query.sort as string;
     let orderBy: any = {};
 
@@ -788,51 +824,42 @@ export const searchProducts = async (req: Request, res: Response) => {
       orderBy = { end_time: 'desc' };
     }
 
-    // full text search query
     const searchQuery = keyword ? String(keyword).trim().split(/\s+/).join(' & ') : undefined;
 
-    // sort condition
     const whereClause: any = {
       status: 'open',
-      end_time: { gt: new Date() }, // chi lay san pham dang mo ban
+      end_time: { gt: new Date() },
     };
 
-    // * full-text search logic
-    // Neu co tu khoa tim kiem, them dieu kien tim kiem vao whereClause,
-    // nghia la tim trong ten san pham va ten danh muc
     if (searchQuery) {
       whereClause.OR = [
         {
           name: {
-            search: searchQuery, // tim trong ten san pham
+            search: searchQuery,
           },
         },
         {
           category: {
-            name_level_1: { search: searchQuery }, // tim trong danh muc lv 1
+            name_level_1: { search: searchQuery },
           },
         },
         {
           category: {
-            name_level_2: { search: searchQuery }, // tim trong danh muc lv 2
+            name_level_2: { search: searchQuery },
           },
         },
       ];
     }
 
-    // sort condition for category filter
     if (category) {
-      // condition: neu da co dieu kien category o trong tu khoa tim kiem, thi them dieu kien vao trong do
       whereClause.category = {
-        ...whereClause.category, // giu nguyen dieu kien category neu co
+        ...whereClause.category,
         name_level_1: { contains: String(category), mode: 'insensitive' },
       };
     }
 
-    // Dem tong so san pham thoa dieu kien de phan trang
     const totalItems = await db.prisma.product.count({ where: whereClause });
 
-    // danh sach san pham thoa dieu kien tim kiem
     const products = await db.prisma.product.findMany({
       where: whereClause,
       orderBy: orderBy,
@@ -844,7 +871,6 @@ export const searchProducts = async (req: Request, res: Response) => {
       },
     });
 
-    // --- formart data (reuse tu getProductsLV) ---
     const formattedProducts = products.map((product) => ({
       id: product.product_id.toString(),
       name: product.name,
@@ -858,7 +884,7 @@ export const searchProducts = async (req: Request, res: Response) => {
     }));
 
     return res.status(200).json({
-      products: formattedProducts, // Tra ve key 'products' cho giong cau truc getProductsLV
+      products: formattedProducts,
       totalItems: totalItems,
       totalPages: Math.ceil(totalItems / limit),
       currentPage: page,
@@ -871,34 +897,30 @@ export const searchProducts = async (req: Request, res: Response) => {
 
 export const appendProductDescription = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // Product ID
+    const { id } = req.params;
     const { description } = req.body;
-    const user = res.locals.user; // user is the seller
+    const user = res.locals.user;
 
     if (!description || description.trim() === '') {
       return res.status(400).json({ message: 'Description cannot be empty' });
     }
 
-    // find product in database
     const product = await db.prisma.product.findUnique({
       where: { product_id: BigInt(id) },
     });
 
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    // only seller can append description
     if (product.seller_id !== user.id) {
       return res.status(403).json({ message: 'Unauthorized: You are not the seller' });
     }
 
-    // only open products can be updated
     if (product.status !== 'open') {
       return res
         .status(400)
         .json({ message: 'Cannot update description for closed/sold products' });
     }
 
-    // append new description to history table
     await db.prisma.productDescriptionHistory.create({
       data: {
         product_id: BigInt(id),

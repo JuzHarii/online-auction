@@ -89,6 +89,8 @@ export type Product = {
   created_at: string;
   highest_bidder_name: string | null;
   image_url: string | null;
+  isWatchlisted: boolean;
+  isSeller: boolean;
 };
 
 export const MemoProductCard = memo(({ product }: { product: Product }) => {
@@ -102,12 +104,21 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
     created_at,
     highest_bidder_name,
     image_url,
+    isSeller,
   } = product;
 
   const [timeLeft, setTimeLeft] = useState(() => calculateTimeRemaining(end_time));
 
+  const [inWatchList, setInWatchList] = useState(!!product.isWatchlisted);
+  const [isWatchLoading, setIsWatchLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const buyNowPriceValue = Number(buy_now_price);
   const canBuyNow = buyNowPriceValue > 0;
+
+  useEffect(() => {
+    setInWatchList(!!product.isWatchlisted);
+  }, [product.isWatchlisted]);
 
   useEffect(() => {
     const updateTimer = () => {
@@ -121,13 +132,58 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
     return () => clearInterval(intervalId);
   }, [end_time]);
 
-  const handleBuyNowClick = (e: React.MouseEvent) => {
-    if (!canBuyNow) {
-      e.preventDefault();
+  const handleToggleWatchList = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isWatchLoading || isSeller) return;
+    setIsWatchLoading(true);
+
+    const endpoint = inWatchList ? `/api/watch-list/${id}` : '/api/watch-list/add';
+
+    const method = inWatchList ? 'DELETE' : 'POST';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId: id }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update watch list');
+
+      setInWatchList(!inWatchList);
+    } catch (error: any) {
+      console.error(error);
+      alert('Signin and try again.');
+    } finally {
+      setIsWatchLoading(false);
     }
   };
 
-  // const diff = (new Date().getTime() - new Date(created_at).getTime()) / 1000 / 60;
+  const handleBuyNowClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (!canBuyNow) return;
+
+    if (confirm(`Buy now for ${formatCurrency(buy_now_price)}?`)) {
+      setIsSubmitting(true);
+      try {
+        const response = await fetch(`/api/products/${id}/buy-now`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) throw new Error('Purchase failed');
+
+        alert('Buy successfully!');
+        window.location.reload();
+      } catch (error: any) {
+        alert(error.message);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
 
   function useDiffTimer(created_at: string) {
     const [diff, setDiff] = useState(() => {
@@ -158,7 +214,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
           diff <= 10
             ? 'border border-[#8D0000] shadow-[0_0_10px_rgba(141,0,0,0.6)]'
             : 'border border-gray-200 shadow-sm'
-        } p-2 rounded-md overflow-hidden flex flex-col transition-shadow h-full bg-white`}
+        } p-2 rounded-md overflow-hidden flex flex-col transition-shadow h-full bg-white group hover:shadow-md`}
       >
         <div className="relative w-full aspect-4/3 bg-gray-100 shrink-0">
           <img
@@ -200,18 +256,95 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
           <div className="mt-auto">
             <p className="text-red-600 font-semibold text-xs text-end mb-2 h-4">{timeLeft}</p>
 
-            <button
-              onClick={handleBuyNowClick}
-              disabled={!canBuyNow}
-              className={`w-full font-bold py-2 rounded text-sm transition-colors shadow-sm 
-                ${
-                  canBuyNow
-                    ? 'bg-[#8D0000] hover:bg-red-900 text-white cursor-pointer'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                }`}
-            >
-              {canBuyNow ? `Buy Now: ${formatCurrency(buy_now_price)}` : 'Auction Only'}
-            </button>
+            {isSeller ? (
+              /* Giao diện Seller: Merge 2 nút thành 1 khối */
+              <div className="w-full h-[84px] bg-amber-50 text-amber-800 border border-amber-200 rounded flex flex-col items-center justify-center gap-1 cursor-default shadow-sm transition-colors hover:bg-amber-100">
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                  <span className="text-[11px] opacity-80">You are the seller</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={handleToggleWatchList}
+                  disabled={isWatchLoading}
+                  className={`w-full flex items-center justify-center gap-1.5 font-medium py-2 mb-2 rounded border transition-colors duration-200 text-sm
+                    ${
+                      inWatchList
+                        ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                >
+                  {isWatchLoading ? (
+                    <span className="text-xs">Updating...</span>
+                  ) : inWatchList ? (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 fill-current"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span className="text-xs">Remove from Watchlist</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                        />
+                      </svg>
+                      <span className="text-xs">Add to Watchlist</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleBuyNowClick}
+                  disabled={!canBuyNow || isSubmitting}
+                  className={`w-full font-bold py-2 rounded text-sm transition-colors shadow-sm 
+                    ${
+                      canBuyNow
+                        ? 'bg-[#8D0000] hover:bg-red-900 text-white cursor-pointer'
+                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                  {isSubmitting
+                    ? 'Processing...'
+                    : canBuyNow
+                      ? `Buy Now: ${formatCurrency(buy_now_price)}`
+                      : 'Auction Only'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

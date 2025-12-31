@@ -8,8 +8,6 @@ export const getBidHistory = async (req: Request, res: Response) => {
     const { id } = req.params; // This is the product_id
     const user = res.locals.user; // Assumed authenticated user
 
-    // 1. Check Product Ownership
-    // We fetch the product to ensure it exists and the user is the seller
     const product = await db.prisma.product.findUnique({
       where: {
         product_id: BigInt(id), // Convert string ID from params to BigInt
@@ -23,19 +21,16 @@ export const getBidHistory = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Security Check: Compare user_id (String/UUID) with seller_id (String/UUID)
     if (product.seller_id !== user.id) {
       return res
         .status(403)
         .json({ message: 'Unauthorized. Only the seller can view bid history.' });
     }
 
-    // 2. Fetch Bids
     const bids = await db.prisma.bidHistory.findMany({
       where: {
         product_id: BigInt(id),
       },
-      // Join with the User model to get bidder details
       include: {
         bidder: {
           select: {
@@ -44,25 +39,22 @@ export const getBidHistory = async (req: Request, res: Response) => {
           },
         },
       },
-      // Order by highest bid first
       orderBy: {
         bid_amount: 'desc',
       },
     });
 
-    // 3. Map to Response Format
     const historyData = bids.map((bid) => ({
-      id: bid.bid_id.toString(), // Convert BigInt ID to string
+      id: bid.bid_id.toString(),
       bidderId: bid.bidder.user_id,
       bidderName: bid.bidder.name,
-      amount: Number(bid.bid_amount), // Convert Decimal to Number for frontend
-      time: bid.bid_time.toISOString(), // Send ISO string for frontend formatting
+      amount: Number(bid.bid_amount),
+      time: bid.bid_time.toISOString(),
     }));
 
     return res.status(200).json(historyData);
   } catch (e) {
     console.error(e);
-    // Explicitly handle the BigInt serialization if returning raw error objects
     return res.status(500).json({ message: String(e) });
   }
 };
@@ -77,9 +69,6 @@ export const banBidder = async (req: Request, res: Response) => {
     const prodIdBigInt = BigInt(productId);
 
     const result = await db.prisma.$transaction(async (tx) => {
-      // 1. Trigger Database sẽ chạy ngay khi dòng này được thực thi
-      // Trigger sẽ làm nhiệm vụ: XÓA BID HISTORY của user này.
-      // (Ta không cần gọi lệnh deleteMany trong code nữa)
       const deniedBidder = await tx.deniedBidders.create({
         data: {
           product_id: prodIdBigInt,
@@ -87,46 +76,36 @@ export const banBidder = async (req: Request, res: Response) => {
         },
       });
 
-      // 2. Lấy thông tin sản phẩm (Start Price, Step Price)
       const product = await tx.product.findUnique({
         where: { product_id: prodIdBigInt },
       });
 
       if (!product) throw new Error('Product not found');
 
-      // 3. Lấy danh sách bid còn lại (Dữ liệu lúc này ĐÃ SẠCH vì trigger đã chạy xong)
       const remainingBids = await tx.bidHistory.findMany({
         where: { product_id: prodIdBigInt },
         orderBy: [{ bid_amount: 'desc' }, { bid_time: 'asc' }],
         take: 2,
       });
 
-      // 4. Tính toán lại giá (Logic Proxy Bidding)
-      // Phần này sẽ "sửa sai" cho trigger nếu trigger tính giá không chuẩn
       let newCurrentPrice = Number(product.start_price);
       let newHighestBidderId = null;
       const stepPrice = Number(product.step_price);
 
       if (remainingBids.length === 0) {
-        // Hết người bid -> Về giá khởi điểm
         newCurrentPrice = Number(product.start_price);
         newHighestBidderId = null;
       } else if (remainingBids.length === 1) {
-        // Còn 1 người -> Về giá khởi điểm (hoặc giữ nguyên bid của họ tùy luật)
-        // Thông thường nếu không còn đối thủ, giá sẽ là Start Price
         newHighestBidderId = remainingBids[0].bidder_id;
         newCurrentPrice = Number(product.start_price);
       } else {
-        // Còn >= 2 người -> Logic Proxy: Giá nhì + Step
         const winnerMaxBid = Number(remainingBids[0].bid_amount);
         const secondMaxBid = Number(remainingBids[1].bid_amount);
 
         newHighestBidderId = remainingBids[0].bidder_id;
 
-        // Công thức: Giá người thứ 2 + Bước giá
         let calculatedPrice = secondMaxBid + stepPrice;
 
-        // Giá sàn không được vượt quá giá trần của người thắng
         if (calculatedPrice > winnerMaxBid) {
           calculatedPrice = winnerMaxBid;
         }
@@ -134,12 +113,10 @@ export const banBidder = async (req: Request, res: Response) => {
         newCurrentPrice = calculatedPrice;
       }
 
-      // 5. Đếm lại số bid thực tế
       const newBidCount = await tx.bidHistory.count({
         where: { product_id: prodIdBigInt },
       });
 
-      // 6. CẬP NHẬT LẠI PRODUCT (Ghi đè lên kết quả của Trigger)
       const updatedProduct = await tx.product.update({
         where: { product_id: prodIdBigInt },
         data: {
@@ -152,7 +129,6 @@ export const banBidder = async (req: Request, res: Response) => {
       return { deniedBidder, updatedProduct };
     });
 
-    // Send email notification to banned bidder
     try {
       const bannedUser = await db.prisma.user.findUnique({
         where: { user_id: bidderId },
@@ -169,7 +145,6 @@ export const banBidder = async (req: Request, res: Response) => {
         await sendBidRejectedEmail(bannedUser.email, product.name, productLink);
       }
     } catch (emailError) {
-      // Log email error but don't fail the ban operation
       console.error('Failed to send bid rejection email:', emailError);
     }
 
@@ -178,7 +153,6 @@ export const banBidder = async (req: Request, res: Response) => {
       data: {
         bannedUser: {
           ...result.deniedBidder,
-          // CHUYỂN ĐỔI Ở ĐÂY:
           product_id: result.deniedBidder.product_id.toString(),
         },
         newProductState: {
@@ -190,7 +164,6 @@ export const banBidder = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Ban Bidder Error: ', error);
-    // Bắt lỗi trigger trả về (ví dụ nếu trigger lỗi)
     if (error.code === 'P2010' || error.message.includes('trigger')) {
       return res.status(500).json({ message: 'Database trigger failed.', error: error.message });
     }
@@ -226,24 +199,17 @@ export const placeBid = async (req: Request, res: Response) => {
           throw new Error('Auction has ended');
         }
 
-        // --- LOGIC KIỂM TRA ĐIỂM ĐÁNH GIÁ (UPDATED) ---
         const minus = userData.minus_review || 0;
         const plus = userData.plus_review || 0;
         const total = plus + minus;
 
-        // TRƯỜNG HỢP 1: Người dùng chưa từng được đánh giá (Total = 0)
         if (total === 0) {
-          // Kiểm tra xem sản phẩm có cho phép người chưa có rating bid không
-          // Giả sử field trong DB là 'allow_unrated_bidder' như schema trước đó
           if (product.allow_unrated_bidder === false) {
             throw new Error('UNRATED_NOT_ALLOWED');
           }
-          // Nếu allow_unrated_bidder = true, cho phép đi tiếp (bỏ qua check 80%)
         }
 
-        // TRƯỜNG HỢP 2: Người dùng ĐÃ CÓ đánh giá (Total > 0)
         else {
-          // Nếu sản phẩm yêu cầu review > 80%
           if (product.review_needed) {
             const ratio = plus / total;
             if (ratio < 0.8) {
@@ -251,7 +217,6 @@ export const placeBid = async (req: Request, res: Response) => {
             }
           }
         }
-        // ------------------------------------------------
 
         const currentDisplayPrice = Number(product.current_price) || Number(product.start_price);
         const stepPrice = Number(product.step_price);
@@ -264,7 +229,6 @@ export const placeBid = async (req: Request, res: Response) => {
           throw new Error(`Bid too low. Minimum allowed is ${actualMinRequired}`);
         }
 
-        // ... (Phần logic tính toán giá mới giữ nguyên như cũ) ...
         let newCurrentPrice = 0;
         let newHighestBidderId = user.id;
 
@@ -329,7 +293,6 @@ export const placeBid = async (req: Request, res: Response) => {
       }
     );
 
-    // Send email notifications for successful bid
     try {
       const bidder = await db.prisma.user.findUnique({
         where: { user_id: user.id },
@@ -352,7 +315,6 @@ export const placeBid = async (req: Request, res: Response) => {
         Number(result.updatedProduct.current_price)
       );
 
-      // Send emails to seller, bidder, and previous bidder
       if (result.updatedProduct.seller && bidder) {
         await sendNewBidEmail(
           result.productName,
@@ -364,7 +326,6 @@ export const placeBid = async (req: Request, res: Response) => {
         );
       }
     } catch (emailError) {
-      // Log email error but don't fail the bid
       console.error('Failed to send bid notification emails:', emailError);
     }
 
@@ -382,7 +343,6 @@ export const placeBid = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Bid Error:', error);
 
-    // Xử lý lỗi trả về client
     if (error.message === 'UNRATED_NOT_ALLOWED') {
       return res.status(403).json({
         message: 'Seller does not allow bidders with no rating history.',

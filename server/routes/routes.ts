@@ -66,15 +66,17 @@ const userLogin = {
 
 router.post('/auth/register', celebrate(createUserSchema), authController.register);
 
+router.post('/auth/social-login', authController.socialLogin);
+
 router.post('/auth/signin', celebrate(userLogin), authController.login);
 
 router.post('/auth/me', authController.getAuthentication, authController.getAccount);
 
 router.post('/auth/logout', authController.logout);
 
-router.get('/home/products/endest', getProductsEndest);
-router.get('/home/products/highestprice', productController.getHighPriceProducts);
-router.get('/home/products/topbid', productController.getTopBiddedProducts);
+router.get('/home/products/endest', authController.getPublicAuthentication, getProductsEndest);
+router.get('/home/products/highestprice', authController.getPublicAuthentication, productController.getHighPriceProducts);
+router.get('/home/products/topbid', authController.getPublicAuthentication, productController.getTopBiddedProducts);
 
 router.get('/product/:id', authController.getPublicAuthentication, getProduct);
 
@@ -88,7 +90,7 @@ router.post(
   authController.getAuthentication,
   productController.handleBuyNow
 );
-router.get('/productsLV/:level1/:level2', productController.getProductsLV);
+router.get('/productsLV/:level1/:level2', authController.getPublicAuthentication, productController.getProductsLV);
 
 router.post('/upload', authController.getSellerAuthentication, uploadProducts);
 
