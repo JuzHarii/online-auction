@@ -9,13 +9,11 @@ export interface Profile {
   created_at: string;
   plus_review: number;
   minus_review: number;
-  // total_bids: number;
-  // bids_this_week: number;
-  // total_wins: number;
-  // win_rate: number;
-  // watchlist_count: number;
-  // rating: number;
-  // rating_label: string;
+};
+
+export interface VerifyInputs {
+  password: string;
+  confirmpassword: string;
 };
 
 export interface ProductCard {

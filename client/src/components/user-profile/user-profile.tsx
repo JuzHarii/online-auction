@@ -1,15 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import UserTab from './user-profile-tabs';
-import { Profile } from './interfaces';
-import { SetAction } from './interfaces';
+import { Profile, VerifyInputs, SetAction } from './interfaces';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Navigate, useNavigate } from 'react-router-dom';
 import { ClipLoader } from 'react-spinners';
 import { LocationOption } from '../register-form';
-import { formatDate } from '../product';
-import { profile } from 'console';
+import PasswordVerification from './password-verification';
 
 const schema = z.object({
   name: z
@@ -97,54 +94,11 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
     },
   });
 
-  console.log('Hế lô KD');
-  console.log(watch('ward'));
 
   const [loading, setLoading] = useState(false);
-  const [disable, setDisable] = useState(true);
-
-  const onSubmitProfile: SubmitHandler<Inputs> = async (data) => {
-    setLoading(true);
-
-    try {
-      const address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
-
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          address: address,
-          birthdate: data.birthdate,
-        }),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        if (!result.isSuccess) {
-          if (result.message?.name) setError('name', { message: result.message.name });
-          if (result.message?.email) setError('email', { message: result.message.email });
-          if (result.message?.birthdate)
-            setError('birthdate', { message: result.message.birthdate });
-          // if (result.message?.address)
-          //   setError('address', { message: result.message.address });
-        }
-      }
-    } catch (err) {
-      console.error('[v0] Update error:', err);
-    } finally {
-      setLoading(false);
-      profile.name = data.name;
-      profile.email = data.email;
-      profile.address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
-      profile.birthdate = data.birthdate ? data.birthdate : '';
-      alert('Edited profile successfully!');
-    }
-  };
+  const [isDisable, setIsDisable] = useState(true);
+  const [pendingData, setPendingData] = useState<Inputs | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   const [province, setProvince] = useState<LocationOption[]>([]);
   const [ward, setWard] = useState<LocationOption[]>([]);
@@ -188,6 +142,59 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
 
   watch('province');
 
+  const onPreSubmit: SubmitHandler<Inputs> = (data) => {
+    setPendingData(data);
+    setIsVerifying(true);
+  };
+
+  const handleVerificationSuccess = async () => {
+    setIsVerifying(false); 
+    
+    if (!pendingData) return; 
+
+    const data = pendingData;
+    setLoading(true);
+
+    try {
+      const address = `${data.homenumber}, ${data.street}, ${data.ward}, ${data.province}`;
+
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          address: address,
+          birthdate: data.birthdate,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        if (!result.isSuccess) {
+          if (result.message?.name) setError('name', { message: result.message.name });
+          if (result.message?.email) setError('email', { message: result.message.email });
+          if (result.message?.birthdate) setError('birthdate', { message: result.message.birthdate });
+        }
+      } else {
+        profile.name = data.name;
+        profile.email = data.email;
+        profile.address = address;
+        profile.birthdate = data.birthdate ? data.birthdate : '';
+        alert('Edited profile successfully!');
+        setPendingData(null); 
+      }
+    } catch (err) {
+      console.error('[v0] Update error:', err);
+    } finally {
+      setLoading(false);
+      setIsDisable(true);
+    }
+  };
+
   useEffect(() => {
     loadProvince();
   }, []);
@@ -201,15 +208,25 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
     return ward.filter((w) => w.path_with_type.includes(provinceCur));
   }, [provinceCur, ward]);
 
+  if (isVerifying) {
+    return (
+      <PasswordVerification
+        email={profile.email}
+        onSuccess={handleVerificationSuccess} // Verify đúng -> Gọi hàm update
+        onCancel={() => setIsVerifying(false)} // Hủy -> Quay lại form edit
+      />
+    );
+  }
   return (
-    <div className="px-10 py-20 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
-      <form onSubmit={handleSubmit(onSubmitProfile)} className="flex flex-col gap-4">
+    <div className="p-10 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
+      <form onSubmit={handleSubmit(onPreSubmit)} className={`flex flex-col gap-2 ${isDisable ? 'text-gray-500' : 'text-black'}`}>
         {/* 1. Full Name */}
         <div className="flex flex-col gap-2">
           <label htmlFor="name" className="font-semibold text-gray-900">
             Full Name
           </label>
           <input
+            disabled={isDisable}
             type="text"
             id="name"
             placeholder="John Doe"
@@ -226,6 +243,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
+              disabled={isDisable}
               type="text"
               id="email"
               placeholder="your@example.com"
@@ -236,11 +254,13 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           {errors.email && <span className="text-[#8D0000]">{errors.email.message}</span>}
         </div>
 
+        {/* 3. Birthdate */}
         <div className="flex flex-col gap-2">
           <label htmlFor="birthdate" className="font-semibold text-gray-900">
             Date of Birth
           </label>
           <input
+            disabled={isDisable}
             type="date"
             id="birthdate"
             {...register('birthdate')}
@@ -259,6 +279,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
               Province/City
             </label>
             <select
+              disabled={isDisable}
               id="city"
               value={provinceCur}
               {...register('province')}
@@ -279,6 +300,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
               Ward
             </label>
             <select
+              disabled={isDisable}
               id="ward"
               value={wardCurr}
               {...register('ward')}
@@ -299,6 +321,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
               Street
             </label>
             <input
+              disabled={isDisable}
               type="text"
               id="street"
               className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
@@ -312,6 +335,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
               House Number
             </label>
             <input
+              disabled={isDisable}
               type="text"
               id="homenumber"
               className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
@@ -323,34 +347,69 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col md:flex-row md:mx-auto gap-5">
-          <button
-            type="submit"
-            disabled={loading}
-            className="
-                md:order-2
-                rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
-                cursor-pointer bg-[#8D0000] text-white
-                hover:scale-101 hover:bg-[#760000] hover:shadow-md
+        <div className="mt-5 flex flex-col md:flex-row md:mx-auto gap-3">
+          {isDisable
+          ? <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsDisable(false)
+              }}
+              className="
+                  md:order-2
+                  rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
+                  cursor-pointer bg-black text-white
+                  hover:scale-101 hover:bg-white hover:border hover:text-black
+                  transition-all duration-200 active:scale-95
+                "
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => setAction('view-tabs')}
+              type="button"
+              className="
+                md:order-1
+                rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
+                cursor-pointer bg-white text-black
+                hover:scale-101 hover:bg-gray-100 hover:shadow-md
                 transition-all duration-200 active:scale-95
               "
-          >
-            {loading ? <ClipLoader loading={loading} size={20} color="white" /> : <p>Save</p>}
-          </button>
+            >
+              Back
+            </button>
+          </>
+          : <>
+            <button
+              type="submit"
+              disabled={loading}
+              className="
+                  md:order-2
+                  rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
+                  cursor-pointer bg-[#8D0000] text-white
+                  hover:scale-101 hover:bg-[#760000] hover:shadow-md
+                  transition-all duration-200 active:scale-95
+                "
+            >
+              {loading ? <ClipLoader loading={loading} size={20} color="white" /> : <p>Save</p>}
+            </button>
 
-          <button
-            onClick={() => setAction('view-tabs')}
-            type="button"
-            className="
-              md:order-1
-              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
-              cursor-pointer bg-white
-              hover:scale-101 hover:bg-gray-100 hover:shadow-md
-              transition-all duration-200 active:scale-95
-            "
-          >
-            Back
-          </button>
+            <button
+              onClick={() => setIsDisable(true)}
+              type="button"
+              className="
+                md:order-1
+                rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
+                cursor-pointer bg-white
+                hover:scale-101 hover:bg-gray-100 hover:shadow-md
+                transition-all duration-200 active:scale-95
+              "
+            >
+              Cancel
+            </button>
+          </>}
+
         </div>
       </form>
     </div>
@@ -358,50 +417,12 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
 }
 
 function ChangePassword({ profile, setAction }: { profile: Profile; setAction: SetAction }) {
-  const [loading, setLoading] = useState(false);
-  const [oldPassword, setOldPassword] = useState('');
+  const [step, setStep] = useState<'verify' | 'new-password'>('verify');
+  
+  const [loading, setLoading] = useState(false); 
   const [error, setError] = useState<string | null>(null);
 
-  const [step, setStep] = useState('verify');
-
   const email = profile.email;
-
-  const onSubmitVerify = async () => {
-    setError(null);
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/profile/verifyuser', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          password: oldPassword,
-        }),
-      });
-
-      const result = await res.json();
-      setLoading(false);
-
-      if (!res.ok) {
-        let errorMsg = 'Errors occure';
-
-        if (typeof result.message === 'string') {
-          errorMsg = result.message;
-        } else if (result.message && typeof result.message === 'object') {
-          errorMsg = Object.values(result.message)[0] as string;
-        }
-
-        setError(errorMsg);
-      } else {
-        setError(null);
-        setStep('new-password');
-      }
-    } catch (e) {
-      setLoading(false);
-      console.log(e);
-    }
-  };
 
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
@@ -419,23 +440,21 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
       path: ['confirmpassword'],
     });
 
-  type Inputs = {
-    password: string;
-    confirmpassword: string;
-  };
+
 
   const {
     register,
-    watch,
     handleSubmit,
     formState: { errors },
-  } = useForm<Inputs>({
+  } = useForm<VerifyInputs>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmitNewPassword = async (data: Inputs) => {
+  const onSubmitNewPassword = async (data: VerifyInputs) => {
     try {
       setLoading(true);
+      setError(null);
+      
       const res = await fetch('/api/changepassword', {
         method: 'PUT',
         headers: {
@@ -459,132 +478,83 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
         setAction('view-tabs');
       }
     } catch (e: any) {
+      setLoading(false);
       console.error(e.message);
+      setError('An error occurred while changing password.');
     }
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 'verify':
-        return (
-          <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4">
-            <h1 className="text-3xl font-bold text-foreground">Verify your self!</h1>
+  if (step === 'verify') {
+    return (
+      <PasswordVerification
+        email={email}
+        onSuccess={() => setStep('new-password')}
+        onCancel={() => setAction('view-tabs')}
+      />
+    );
+  }
 
-            <hr />
+  return (
+    <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4">
+      <h1 className="text-3xl font-bold text-foreground">Create a new password</h1>
+      <hr />
+      
+      {error && <div className="text-[#8D0000]">{error}</div>}
 
-            {error && <div className="text-[#8D0000]">{error}</div>}
+      <form className="flex flex-col gap-2" onSubmit={handleSubmit(onSubmitNewPassword)}>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="password" className="font-semibold text-gray-900">
+            New password
+          </label>
+          <input
+            type="password"
+            id="password"
+            placeholder="********"
+            className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
+            {...register('password')}
+          />
+          {errors.password && <span className="text-red-500 text-sm">{errors.password.message}</span>}
+          <p className="text-xs text-gray-500">
+            At least 8 characters with uppercase, lowercase, number, and special character
+          </p>
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <label htmlFor="confirmpassword" className="font-semibold text-gray-900">
+            Retype new password
+          </label>
+          <input
+            type="password"
+            id="confirmpassword"
+            placeholder="********"
+            className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
+            {...register('confirmpassword')}
+          />
+           {errors.confirmpassword && <span className="text-red-500 text-sm">{errors.confirmpassword.message}</span>}
+        </div>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                onSubmitVerify();
-              }}
-              className="flex flex-col gap-6"
-            >
-              <label htmlFor="password" className="text-muted-foreground">
-                Old password
-              </label>
-
-              <input
-                id="password"
-                type="password"
-                onChange={(e) => setOldPassword(e.target.value)}
-                placeholder="********"
-                className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
-              />
-
-              <div className="mt-10 flex flex-col md:flex-row md:mx-auto gap-5">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="
-                    md:order-2
-                    rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
-                    cursor-pointer bg-[#8D0000] text-white
-                    hover:scale-101 hover:bg-[#760000] hover:shadow-md
-                    transition-all duration-200 active:scale-95
-                  "
-                >
-                  {loading ? 'Đang kiểm tra...' : 'Continue'}
-                </button>
-
-                <button
-                  onClick={() => setAction('view-tabs')}
-                  type="button"
-                  className="
-                    md:order-1
-                    rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
-                    cursor-pointer bg-white
-                    hover:scale-101 hover:bg-gray-100 hover:shadow-md
-                    transition-all duration-200 active:scale-95
-                  "
-                >
-                  Back
-                </button>
-              </div>
-            </form>
+        <div className="flex flex-row gap-4 w-full justify-end mt-4">
+          <div
+            onClick={() => setAction('view-tabs')}
+            className={`w-fit bg-black font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}
+          >
+            Cancel
           </div>
-        );
-
-      case 'new-password':
-        return (
-          <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4">
-            <h1 className="text-3xl font-bold text-foreground">Create a new password</h1>
-            <hr />
-            <form className="flex flex-col gap-2" onSubmit={handleSubmit(onSubmitNewPassword)}>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="password" className="font-semibold text-gray-900">
-                  New password{' '}
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder="********"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
-                  {...register('password')}
-                />
-                <p className="text-xs text-gray-500">
-                  At least 8 characters with uppercase, lowercase, number, and special character
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label htmlFor="confirmpassword" className="font-semibold text-gray-900">
-                  Retype new password
-                </label>
-                <input
-                  type="password"
-                  id="confirmpassword"
-                  placeholder="********"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
-                  {...register('confirmpassword')}
-                />
-              </div>
-
-              <div className="flex flex-row gap-4 w-full justify-end mt-4">
-                <div
-                  onClick={() => setAction('view-tabs')}
-                  className={`w-fit bg-black font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}
-                >
-                  Cancel
-                </div>
-                <button
-                  type="submit"
-                  className={`w-fit bg-[#8D0000] font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}
-                >
-                  {loading ? (
-                    <ClipLoader loading={loading} size={20} color="white" />
-                  ) : (
-                    <p>Continue</p>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        );
-    }
-  };
-
-  return <>{renderStep()}</>;
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-fit bg-[#8D0000] font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}
+          >
+            {loading ? (
+              <ClipLoader loading={loading} size={20} color="white" />
+            ) : (
+              <p>Continue</p>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 }
 
 function RequesRole({ setAction }: { setAction: SetAction }) {
@@ -685,7 +655,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
             disabled={loading}
             className="
               md:order-2
-              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
+              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
               cursor-pointer bg-[#8D0000] text-white
               hover:scale-101 hover:bg-[#760000] hover:shadow-md
               transition-all duration-200 active:scale-95
@@ -699,7 +669,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
             type="button"
             className="
               md:order-1
-              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-3 px-10
+              rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
               cursor-pointer bg-white
               hover:scale-101 hover:bg-gray-100 hover:shadow-md
               transition-all duration-200 active:scale-95
@@ -713,7 +683,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
   );
 }
 
-function ViewTabs({ profile, setAction }: { profile: Profile; setAction: SetAction }) {
+function ViewTabs({ profile }: { profile: Profile }) {
   return <UserTab profile={profile} />;
 }
 
@@ -735,10 +705,10 @@ export default function UserAction({
       case 'request-role':
         return <RequesRole setAction={setAction} />;
       case 'view-tabs':
-        return <ViewTabs profile={profile} setAction={setAction} />;
+        return <ViewTabs profile={profile} />;
       default:
         return <h1 className="text-3xl text-red-500">Invalid Action!</h1>;
     }
   };
-  return <div className="h-full flex-4 min-w-0">{renderAction()}</div>;
+  return <div className="h-full w-full flex-4 min-w-0">{renderAction()}</div>;
 }

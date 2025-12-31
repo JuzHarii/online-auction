@@ -215,7 +215,10 @@ function Layout() {
                           </div>
                           <div className='font-bold text-[#8D0000]'>{user.name}</div>
                         </li>
-                        <Link to={"/profile"} className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:text-black cursor-pointer'>
+                        <Link
+                          to={"/profile"} onClick={() => setShowUser((prev) => !prev)}
+                          className='px-4 py-2 flex gap-2 items-center text-sm text-gray-700 hover:bg-gray-100 hover:text-black cursor-pointer'
+                        >
                           <div 
                             className='bg-gray-200 rounded-full p-1'
                           >
