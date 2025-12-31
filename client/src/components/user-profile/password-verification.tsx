@@ -43,7 +43,6 @@ export default function PasswordVerification({
 
         setError(errorMsg);
       } else {
-        // Xác thực thành công -> Gọi callback từ component cha
         setError(null);
         onSuccess();
       }

@@ -44,30 +44,23 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
   const formatDateForInput = (dateInput?: string | Date | null) => {
     if (!dateInput) return '';
 
-    // Trường hợp 1: Nếu là chuỗi dạng "d/m/y" (VD: "7/5/2005" hoặc "13/05/2005")
     if (typeof dateInput === 'string' && dateInput.includes('/')) {
       const parts = dateInput.split('/');
-      // Giả định format là D/M/YYYY (Việt Nam)
+      // assume D/M/YYYY
       if (parts.length === 3) {
         let d = parts[1].padStart(2, '0');
         let m = parts[0].padStart(2, '0');
         let y = parts[2];
 
-        // Logic check: Nếu input là M/D/Y (Mỹ) mà server trả về (VD: 12/31/2005)
-        // Nếu số đầu > 12 thì chắc chắn là Ngày -> Giữ nguyên D/M/Y
-        // Nếu số thứ 2 > 12 thì chắc chắn số 2 là Ngày -> Đảo thành M/D/Y
-        // Tuy nhiên, ưu tiên ép kiểu về YYYY-MM-DD
         return `${y}-${m}-${d}`;
       }
     }
 
-    // Trường hợp 2: Date object hoặc ISO String chuẩn
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return '';
 
-    // Dùng getFullYear/Month/Date để tránh bị lệch múi giờ (UTC vs Local)
     const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
 
     return `${yyyy}-${mm}-${dd}`;
@@ -93,7 +86,6 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
       province: addressDefaults.province,
     },
   });
-
 
   const [loading, setLoading] = useState(false);
   const [isDisable, setIsDisable] = useState(true);
@@ -148,9 +140,9 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
   };
 
   const handleVerificationSuccess = async () => {
-    setIsVerifying(false); 
-    
-    if (!pendingData) return; 
+    setIsVerifying(false);
+
+    if (!pendingData) return;
 
     const data = pendingData;
     setLoading(true);
@@ -177,7 +169,8 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
         if (!result.isSuccess) {
           if (result.message?.name) setError('name', { message: result.message.name });
           if (result.message?.email) setError('email', { message: result.message.email });
-          if (result.message?.birthdate) setError('birthdate', { message: result.message.birthdate });
+          if (result.message?.birthdate)
+            setError('birthdate', { message: result.message.birthdate });
         }
       } else {
         profile.name = data.name;
@@ -185,7 +178,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
         profile.address = address;
         profile.birthdate = data.birthdate ? data.birthdate : '';
         alert('Edited profile successfully!');
-        setPendingData(null); 
+        setPendingData(null);
       }
     } catch (err) {
       console.error('[v0] Update error:', err);
@@ -212,15 +205,17 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
     return (
       <PasswordVerification
         email={profile.email}
-        onSuccess={handleVerificationSuccess} // Verify đúng -> Gọi hàm update
-        onCancel={() => setIsVerifying(false)} // Hủy -> Quay lại form edit
+        onSuccess={handleVerificationSuccess}
+        onCancel={() => setIsVerifying(false)}
       />
     );
   }
   return (
     <div className="p-10 rounded-sm ring ring-gray-200 shadow-sm shadow-stone-300">
-      <form onSubmit={handleSubmit(onPreSubmit)} className={`flex flex-col gap-2 ${isDisable ? 'text-gray-500' : 'text-black'}`}>
-        {/* 1. Full Name */}
+      <form
+        onSubmit={handleSubmit(onPreSubmit)}
+        className={`flex flex-col gap-2 ${isDisable ? 'text-gray-500' : 'text-black'}`}
+      >
         <div className="flex flex-col gap-2">
           <label htmlFor="name" className="font-semibold text-gray-900">
             Full Name
@@ -236,7 +231,6 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           {errors.name && <span className="text-[#8D0000]">{errors.name.message}</span>}
         </div>
 
-        {/* 2. Email */}
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className="font-semibold text-gray-900">
             Email
@@ -254,7 +248,6 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           {errors.email && <span className="text-[#8D0000]">{errors.email.message}</span>}
         </div>
 
-        {/* 3. Birthdate */}
         <div className="flex flex-col gap-2">
           <label htmlFor="birthdate" className="font-semibold text-gray-900">
             Date of Birth
@@ -269,10 +262,8 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
           {errors.birthdate && <span className="text-[#8D0000]">{errors.birthdate.message}</span>}
         </div>
 
-        {/* 4. Address Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {' '}
-          {/* Grid 1 cột trên mobile, 2 cột trên sm+ */}
           {/* Province/City */}
           <div className="flex flex-col gap-2">
             <label htmlFor="city" className="font-semibold text-gray-900">
@@ -348,68 +339,69 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
         </div>
 
         <div className="mt-5 flex flex-col md:flex-row md:mx-auto gap-3">
-          {isDisable
-          ? <>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsDisable(false)
-              }}
-              className="
+          {isDisable ? (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsDisable(false);
+                }}
+                className="
                   md:order-2
                   rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
                   cursor-pointer bg-black text-white
                   hover:scale-101 hover:bg-white hover:border hover:text-black
                   transition-all duration-200 active:scale-95
                 "
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => setAction('view-tabs')}
-              type="button"
-              className="
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => setAction('view-tabs')}
+                type="button"
+                className="
                 md:order-1
                 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
                 cursor-pointer bg-white text-black
                 hover:scale-101 hover:bg-gray-100 hover:shadow-md
                 transition-all duration-200 active:scale-95
               "
-            >
-              Back
-            </button>
-          </>
-          : <>
-            <button
-              type="submit"
-              disabled={loading}
-              className="
+              >
+                Back
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="submit"
+                disabled={loading}
+                className="
                   md:order-2
                   rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
                   cursor-pointer bg-[#8D0000] text-white
                   hover:scale-101 hover:bg-[#760000] hover:shadow-md
                   transition-all duration-200 active:scale-95
                 "
-            >
-              {loading ? <ClipLoader loading={loading} size={20} color="white" /> : <p>Save</p>}
-            </button>
+              >
+                {loading ? <ClipLoader loading={loading} size={20} color="white" /> : <p>Save</p>}
+              </button>
 
-            <button
-              onClick={() => setIsDisable(true)}
-              type="button"
-              className="
+              <button
+                onClick={() => setIsDisable(true)}
+                type="button"
+                className="
                 md:order-1
                 rounded-sm ring ring-gray-200 shadow-sm shadow-black-300 py-1 px-10
                 cursor-pointer bg-white
                 hover:scale-101 hover:bg-gray-100 hover:shadow-md
                 transition-all duration-200 active:scale-95
               "
-            >
-              Cancel
-            </button>
-          </>}
-
+              >
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>
@@ -418,8 +410,8 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
 
 function ChangePassword({ profile, setAction }: { profile: Profile; setAction: SetAction }) {
   const [step, setStep] = useState<'verify' | 'new-password'>('verify');
-  
-  const [loading, setLoading] = useState(false); 
+
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const email = profile.email;
@@ -440,8 +432,6 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
       path: ['confirmpassword'],
     });
 
-
-
   const {
     register,
     handleSubmit,
@@ -454,7 +444,7 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
     try {
       setLoading(true);
       setError(null);
-      
+
       const res = await fetch('/api/changepassword', {
         method: 'PUT',
         headers: {
@@ -498,7 +488,7 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
     <div className="p-8 border border-gray-200 shadow-lg rounded-lg bg-white flex flex-col gap-4">
       <h1 className="text-3xl font-bold text-foreground">Create a new password</h1>
       <hr />
-      
+
       {error && <div className="text-[#8D0000]">{error}</div>}
 
       <form className="flex flex-col gap-2" onSubmit={handleSubmit(onSubmitNewPassword)}>
@@ -513,12 +503,14 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
             className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
             {...register('password')}
           />
-          {errors.password && <span className="text-red-500 text-sm">{errors.password.message}</span>}
+          {errors.password && (
+            <span className="text-red-500 text-sm">{errors.password.message}</span>
+          )}
           <p className="text-xs text-gray-500">
             At least 8 characters with uppercase, lowercase, number, and special character
           </p>
         </div>
-        
+
         <div className="flex flex-col gap-2">
           <label htmlFor="confirmpassword" className="font-semibold text-gray-900">
             Retype new password
@@ -530,7 +522,9 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
             className="w-full px-3 py-2 border rounded-md focus:outline-2 focus:outline-[#8D0000]"
             {...register('confirmpassword')}
           />
-           {errors.confirmpassword && <span className="text-red-500 text-sm">{errors.confirmpassword.message}</span>}
+          {errors.confirmpassword && (
+            <span className="text-red-500 text-sm">{errors.confirmpassword.message}</span>
+          )}
         </div>
 
         <div className="flex flex-row gap-4 w-full justify-end mt-4">
@@ -545,11 +539,7 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
             disabled={loading}
             className={`w-fit bg-[#8D0000] font-bold text-white py-2 px-4 rounded-md transition-color hover:cursor-pointer`}
           >
-            {loading ? (
-              <ClipLoader loading={loading} size={20} color="white" />
-            ) : (
-              <p>Continue</p>
-            )}
+            {loading ? <ClipLoader loading={loading} size={20} color="white" /> : <p>Continue</p>}
           </button>
         </div>
       </form>
@@ -565,7 +555,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
   const onSubmitRequest = async () => {
     if (!message || message.trim() === '') {
       setError('Message must not be left blank!');
-      return; // Dừng hàm ngay lập tức, không gửi API
+      return;
     }
 
     setError(null);
@@ -661,7 +651,7 @@ function RequesRole({ setAction }: { setAction: SetAction }) {
               transition-all duration-200 active:scale-95
             "
           >
-            {loading ? 'Đang kiểm tra...' : 'Continue'}
+            {loading ? 'Checking...' : 'Continue'}
           </button>
 
           <button

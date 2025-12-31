@@ -9,12 +9,10 @@ interface ProductQAProps {
 }
 
 export const ProductQA = ({ product, onRefresh }: ProductQAProps) => {
-  // State for asking question (user)
   const [showAskForm, setShowAskForm] = useState(false);
   const [questionText, setQuestionText] = useState('');
   const [isSendingQA, setIsSendingQA] = useState(false);
 
-  // State for Reply (seller)
   const [replyingQaId, setReplyingQaId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
@@ -66,7 +64,7 @@ export const ProductQA = ({ product, onRefresh }: ProductQAProps) => {
       alert('Reply sent!, The questioner has been notified via email.');
       setReplyText('');
       setReplyingQaId(null);
-      onRefresh(); // Refresh the QA list
+      onRefresh();
     } catch (error: any) {
       alert(error.message);
     } finally {
@@ -193,7 +191,6 @@ export const ProductQA = ({ product, onRefresh }: ProductQAProps) => {
                     </div>
                   </div>
                 ) : (
-                  // Nut reply / edit khi chua reply / da co reply
                   <button
                     onClick={() => openReplyForm(item.id, item.answer)}
                     className="text-xs font-bold text-[#8D0000] hover:underline flex items-center gap-1 mt-1"
@@ -211,7 +208,6 @@ export const ProductQA = ({ product, onRefresh }: ProductQAProps) => {
                 )}
               </div>
             )}
-            {/* thong bao doi tra loi cho user */}
             {!product.isSeller && !item.answer && (
               <p className="text-xs text-gray-400 italic pl-4 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> Waiting for seller

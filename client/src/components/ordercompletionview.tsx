@@ -3,7 +3,6 @@ import { CheckCircle2, Circle, MessageSquare, XCircle, ThumbsUp, ThumbsDown } fr
 import { OrderChat } from './order-chat';
 import { ClipLoader } from 'react-spinners';
 
-// ---------- TYPES ----------
 type OrderStatus = 'pending_payment' | 'payment_confirmed' | 'shipped' | 'completed' | 'cancelled';
 type LikeStatus = 'like' | 'dislike' | null;
 
@@ -26,7 +25,6 @@ interface Order {
   shipping_proof_url: string;
 }
 
-// ---------- HELPER FUNCTION ----------
 const toBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -35,19 +33,16 @@ const toBase64 = (file: File) =>
     reader.onerror = reject;
   });
 
-// ---------- COMPONENT ----------
 export function OrderCompletionView({ order: orderProp }: { order: Order }) {
   const [order, setOrder] = useState<Order>(orderProp);
   const [showChat, setShowChat] = useState(false);
   const [shippingAddress, setShippingAddress] = useState(order.shipping_address ?? '');
 
-  // Invoice files
   const [paymentInvoice, setPaymentInvoice] = useState<File | null>(null);
   const [paymentInvoicePreview, setPaymentInvoicePreview] = useState<string | null>(null);
   const [shippingInvoice, setShippingInvoice] = useState<File | null>(null);
   const [shippingInvoicePreview, setShippingInvoicePreview] = useState<string | null>(null);
 
-  // Rating / Review states
   const [likeStatus, setLikeStatus] = useState<LikeStatus>(null);
   const [review, setReview] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(order.is_reviewed);
@@ -57,12 +52,10 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
   const isBuyer = !order.is_seller;
   const isCancelled = order.status === 'cancelled';
 
-  // ---------- UI CLASSES ----------
   const PRIMARY = 'bg-[#8D0000] text-white hover:bg-gray-800 transition-colors';
   const DESTRUCTIVE = 'bg-black text-white hover:cursor-pointer';
   const MUTE = 'bg-gray-100';
 
-  // ---------- STEPS ----------
   const steps = [
     {
       number: 1,
@@ -106,7 +99,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
     setOrder((prev) => ({ ...prev, ...updates }));
   };
 
-  // ---------- HANDLERS ----------
   const handlePaymentInvoiceChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -248,7 +240,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
     }
   };
 
-  // ---------- CANCELLED VIEW ----------
   if (isCancelled) {
     return (
       <div className="container mx-auto py-8 px-4">
@@ -272,7 +263,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
     );
   }
 
-  // ---------- MAIN UI ----------
   return (
     <div className="container mx-auto py-8 px-4 flex flex-col gap-4 max-w-4xl">
       <div className="mx-auto border rounded-xl bg-white shadow-lg w-full">
@@ -319,7 +309,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                 </h3>
                 <p className="text-sm text-gray-500 mb-4">{step.description}</p>
 
-                {/* STEP 1 Logic */}
                 {step.number === 1 && isBuyer && order.status === 'pending_payment' && (
                   <div className={`${MUTE} p-4 rounded-lg space-y-3`}>
                     <textarea
@@ -378,7 +367,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                   />
                 )}
 
-                {/* STEP 2 Logic */}
                 {step.number === 2 && order.is_seller && order.status === 'payment_confirmed' && (
                   <div className="space-y-3">
                     {!shippingInvoicePreview && (
@@ -429,7 +417,6 @@ export function OrderCompletionView({ order: orderProp }: { order: Order }) {
                   />
                 )}
 
-                {/* STEP 3 Logic */}
                 {step.number === 3 && isBuyer && order.status === 'shipped' && (
                   <button
                     className={`h-10 px-4 rounded-md ${PRIMARY}`}

@@ -19,11 +19,9 @@ import {
 import { useUser } from '../UserContext';
 import { includes } from 'zod';
 
-// --- Helpers ---
 const cn = (...classes: (string | boolean | undefined)[]): string =>
   classes.filter(Boolean).join(' ');
 
-// --- Types & API Endpoints ---
 type AdminTabId = 'categories' | 'products' | 'users' | 'upgrade-requests' | 'settings';
 
 interface SidebarItem {
@@ -208,7 +206,6 @@ const AdminSidebar: React.FC<{
   );
 });
 
-// --- Header ---
 const AdminHeader: React.FC<{
   title: string;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -250,7 +247,6 @@ const AdminHeader: React.FC<{
   );
 });
 
-// --- Category Management ---
 const CategoryManagement: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -293,7 +289,7 @@ const CategoryManagement: React.FC = () => {
   }, []);
 
   const handleDeleteCategory = async (category: Category) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete the category?");
+    const isConfirmed = window.confirm('Are you sure you want to delete the category?');
     if (!isConfirmed) return;
     if (category.product_count > 0) return;
     try {
@@ -426,9 +422,6 @@ const CategoryManagement: React.FC = () => {
                     {category.product_count}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                    {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
-                    {/* <button className={getButtonClasses('ghost', 'icon', "text-yellow-600 hover:text-yellow-800 mr-2")} title="Edit"><Edit className="h-4 w-4" /></button> */}
-
                     <button
                       className={iconGhostBlueClass}
                       title="View Details"
@@ -493,7 +486,7 @@ const CategoryManagement: React.FC = () => {
         )}
       </div>
 
-      {/* --- Add Modal --- */}
+      {/* add modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md transform transition-all">
@@ -542,10 +535,6 @@ const CategoryManagement: React.FC = () => {
                     product_count: 0,
                   };
                   handleAddCategory(newCategory);
-                  // setCategories(prev => [...prev, newCategory]);
-                  // setNewCategoryName('');
-                  // setNewCategoryParent(null);
-                  // setIsAddModalOpen(false);
                 }}
               >
                 Add
@@ -615,7 +604,6 @@ const CategoryManagement: React.FC = () => {
   );
 };
 
-// --- Product Management ---
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -633,7 +621,7 @@ const ProductManagement: React.FC = () => {
   }, []);
 
   const handleDeleteProduct = async (product: Product) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete the product?");
+    const isConfirmed = window.confirm('Are you sure you want to delete the product?');
     if (!isConfirmed) return;
     try {
       setLoading(true);
@@ -667,10 +655,6 @@ const ProductManagement: React.FC = () => {
   return (
     <div className="max-w-6xl flex flex-col gap-4">
       <h2 className="text-2xl font-bold">Product Management</h2>
-      {/* <div className="flex flex-row gap-2 justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <input type="text" placeholder="Search Products..." className={getInputClasses("w-1/3 border-gray-300")} />
-            </div> */}
-
       <div className="overflow-x-auto border rounded-md">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -712,7 +696,6 @@ const ProductManagement: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
                   <button
                     className={iconDestructiveClass}
                     title="Remove Product"
@@ -730,7 +713,6 @@ const ProductManagement: React.FC = () => {
   );
 };
 
-// --- User Management ---
 const UserManagement: React.FC<{
   setActiveTab: React.Dispatch<React.SetStateAction<AdminTabId>>;
 }> = ({ setActiveTab }) => {
@@ -758,7 +740,7 @@ const UserManagement: React.FC<{
   }, []);
 
   const handleDeleteUser = async (user: User) => {
-    const isConfirmed = window.confirm("Are you sure you want to delete the user?");
+    const isConfirmed = window.confirm('Are you sure you want to delete the user?');
     if (!isConfirmed) return;
     try {
       setLoading(true);
@@ -792,9 +774,6 @@ const UserManagement: React.FC<{
   return (
     <div className="max-w-6xl flex flex-col gap-4">
       <h2 className="text-2xl font-bold">Users List</h2>
-      {/* <div className="flex flex-row gap-2 justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                <input type="text" placeholder="Search Users..." className={getInputClasses("w-1/3 border-gray-300")} />
-            </div> */}
 
       <div className="overflow-x-auto border rounded-md">
         <table className="min-w-full divide-y divide-gray-200">
@@ -823,8 +802,6 @@ const UserManagement: React.FC<{
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
-                  {/* <button className={iconGhostBlueClass} title="View Details"><Eye className="h-4 w-4" /></button> */}
                   <button
                     className={iconGhostBlueClass}
                     title="View Details"
@@ -907,7 +884,6 @@ const UserManagement: React.FC<{
   );
 };
 
-// --- Upgrade Requests Management ---
 const UpgradeRequestsManagement: React.FC = () => {
   const [requests, setRequests] = useState<UpgradeRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -1044,7 +1020,7 @@ const UpgradeRequestsManagement: React.FC = () => {
 };
 
 const SettingsManagement: React.FC = () => {
-  // 1. CHANGED: Use string state to avoid hardcoding defaults and allow empty inputs
+  // Use string state to avoid hardcoding defaults and allow empty inputs
   const [windowMinutes, setWindowMinutes] = useState<string>('');
   const [durationMinutes, setDurationMinutes] = useState<string>('');
 
@@ -1062,7 +1038,7 @@ const SettingsManagement: React.FC = () => {
         const result = await res.json();
 
         if (res.ok && result.isSuccess) {
-          // 2. CHANGED: Convert DB numbers to strings for the inputs
+          // Convert DB numbers to strings for the inputs
           setWindowMinutes(String(result.data.extend_window_minutes));
           setDurationMinutes(String(result.data.extend_duration_minutes));
         } else {
@@ -1078,7 +1054,7 @@ const SettingsManagement: React.FC = () => {
   }, []);
 
   const handleSave = async () => {
-    // 3. ADDED: Basic validation before sending
+    // Basic validation before sending
     const windowVal = parseInt(windowMinutes);
     const durationVal = parseInt(durationMinutes);
 
@@ -1097,7 +1073,6 @@ const SettingsManagement: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          // 4. CHANGED: Convert strings back to numbers for the DB
           extend_window_minutes: windowVal,
           extend_duration_minutes: durationVal,
         }),
@@ -1155,7 +1130,7 @@ const SettingsManagement: React.FC = () => {
               min="1"
               className={getInputClasses('max-w-[150px]')}
               value={windowMinutes}
-              onChange={(e) => setWindowMinutes(e.target.value)} // No Number() casting here
+              onChange={(e) => setWindowMinutes(e.target.value)}
               placeholder="e.g. 5"
             />
             <span className="text-sm text-gray-600">minutes</span>
@@ -1178,7 +1153,7 @@ const SettingsManagement: React.FC = () => {
               min="1"
               className={getInputClasses('max-w-[150px]')}
               value={durationMinutes}
-              onChange={(e) => setDurationMinutes(e.target.value)} // No Number() casting here
+              onChange={(e) => setDurationMinutes(e.target.value)}
               placeholder="e.g. 10"
             />
             <span className="text-sm text-gray-600">minutes</span>
@@ -1222,7 +1197,6 @@ const SettingsManagement: React.FC = () => {
   );
 };
 
-// --- Admin Page ---
 const AdminPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTabId>('categories');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
@@ -1243,7 +1217,7 @@ const AdminPage: React.FC = () => {
       break;
     case 'settings':
       MainContent = <SettingsManagement />;
-      break; // Added this line
+      break;
     default:
       MainContent = <div>Page Not Found</div>;
   }

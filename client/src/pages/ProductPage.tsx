@@ -21,7 +21,6 @@ const formatCurrency = (amount: number) => {
     .replace('₫', '');
 };
 
-// Toolbar configuration for the Append Info box (simplified)
 const quillModules = {
   toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }], ['clean']],
 };
@@ -38,25 +37,22 @@ const ProductPage = () => {
 
   const navigate = useNavigate();
 
-  // 1. Fetch dữ liệu
   const fetchProduct = async () => {
     try {
       if (!id) return;
-      // setProduct(null); // Optional: Comment out to prevent flashing loading screen on re-fetch
       setActiveImage('');
 
       const res = await fetch(`/api/product/${id}`);
       if (!res.ok) throw new Error('Failed to fetch product');
       const data: Product = await res.json();
-      
+
       if (data.orderId !== null) {
-        navigate(`/payment/${data.orderId}`)
+        navigate(`/payment/${data.orderId}`);
       }
       setProduct(data);
       if (data.images && data.images.length > 0) {
         setActiveImage(data.images[0]);
       }
-      
     } catch (error) {
       console.error('Error fetching product:', error);
     }
@@ -71,9 +67,7 @@ const ProductPage = () => {
     return img.startsWith('http') ? img : `/api/assets/${img}`;
   };
 
-  // Edit description handler
   const handleAppendDescription = async () => {
-    // Validation: Strip HTML tags to check if it's truly empty
     const plainText = newDesc.replace(/<[^>]+>/g, '').trim();
 
     if (!plainText) {
@@ -86,7 +80,7 @@ const ProductPage = () => {
       const res = await fetch(`/api/product/${product?.id}/description`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: newDesc }), // Send HTML string
+        body: JSON.stringify({ description: newDesc }),
         credentials: 'include',
       });
 
@@ -167,7 +161,6 @@ const ProductPage = () => {
                 Product details
               </h2>
 
-              {/* --- SPECIFICATIONS --- */}
               <div className="mb-8">
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide mb-4">
                   Specifications
@@ -198,7 +191,6 @@ const ProductPage = () => {
                 </div>
               </div>
 
-              {/* --- DESCRIPTION --- */}
               <div>
                 <div className="flex justify-between items-end mb-4">
                   <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -214,21 +206,19 @@ const ProductPage = () => {
                   )}
                 </div>
 
-                {/* FORM NHẬP LIỆU (UPDATED FOR QUILL) */}
                 {isAddingDesc && (
                   <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200 animate-in fade-in">
                     <h4 className="text-xs font-bold text-gray-800 mb-2 flex items-center gap-1">
                       <Pencil size={12} /> Append info:
                     </h4>
 
-                    {/* Quill Editor */}
                     <div className="bg-white mb-3">
                       <ReactQuill
                         theme="snow"
                         value={newDesc}
                         onChange={setNewDesc}
                         modules={quillModules}
-                        className="h-32 mb-10" // mb-10 handles toolbar overflow space usually
+                        className="h-32 mb-10"
                       />
                     </div>
 

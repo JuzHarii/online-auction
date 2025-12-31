@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ClipLoader } from 'react-spinners';
 
-// --- ĐỊNH NGHĨA TYPES ---
+// ĐỊNH NGHĨA TYPES
 interface ChatMessageWithNames {
   chat_message_id: string;
   order_id: string;
@@ -32,7 +32,6 @@ const SendIcon = () => (
   </svg>
 );
 
-// --- FETCH DATA FROM BACKEND ---
 async function fetchInitialChatData(
   orderId: string,
   cur_id: string,
@@ -75,7 +74,7 @@ async function fetchInitialChatData(
   }
 }
 
-// --- COMPONENT ORDERCHAT ---
+// COMPONENT ORDERCHAT
 export function OrderChat({
   orderId,
   cur_id,
@@ -99,7 +98,6 @@ export function OrderChat({
 
   const [loadingSendMess, setLoadingSendMess] = useState(false);
 
-  // Load initial messages
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
