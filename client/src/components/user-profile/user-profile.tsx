@@ -206,6 +206,7 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
       <PasswordVerification
         email={profile.email}
         onSuccess={handleVerificationSuccess}
+        onFinish={handleVerificationSuccess}
         onCancel={() => setIsVerifying(false)}
       />
     );
@@ -480,6 +481,7 @@ function ChangePassword({ profile, setAction }: { profile: Profile; setAction: S
         email={email}
         onSuccess={() => setStep('new-password')}
         onCancel={() => setAction('view-tabs')}
+        onFinish={() => setAction('view-tabs')}
       />
     );
   }

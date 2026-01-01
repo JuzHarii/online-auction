@@ -17,8 +17,8 @@ const schema = z
   .object({
     name: z
       .string()
-      .min(3, { message: 'Name must be 3–8 characters.' })
-      .max(8, { message: 'Name must be 3–8 characters.' }),
+      .min(3, { message: 'Name must be 3–50 characters.' })
+      .max(50, { message: 'Name must be 3–50 characters.' }),
     email: z.string().email({ message: 'Invalid email format' }),
     password: z.string().regex(strongPasswordRegex, {
       message:
