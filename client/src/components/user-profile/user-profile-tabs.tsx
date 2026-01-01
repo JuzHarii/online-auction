@@ -49,12 +49,11 @@ function UserContainer({
   if (!user_id)
     return <h2 className={`w-fit text-${isLarge ? 'lg' : 'base'} font-bold`}>No bidder yet</h2>;
   return (
-    <Link
-      to={`/profile/${user_id}`}
-      className={`w-fit cursor-pointer text-${isLarge ? 'lg hover:text-[#8D0000]' : 'base hover:scale-102 text-[#8D0000]'} font-bold`}
+    <div
+      className={`w-fit text-${isLarge ? 'lg' : 'base'} font-bold`}
     >
       {user_name}
-    </Link>
+    </div>
   );
 }
 
