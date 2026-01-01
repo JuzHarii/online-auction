@@ -128,10 +128,7 @@ export default function ReviewBox(
     }
   }
 
-  if (
-    role ==='bidder' && (orderStatus === 'completed' || orderStatus === 'cancelled')
-    || role ==='seller' && orderStatus !== 'pending_payment'
-  )
+  if (orderStatus === 'completed' || orderStatus === 'cancelled')
     return (
       <div className="mt-2">
         {isReviewing 

@@ -676,7 +676,7 @@ function ReviewsTab() {
     fetchReviews();
   }, []);
 
-  const positiveCount = useMemo(() => reviews.filter(r => r.is_positive).length, [reviews]);
+  const positiveCount = useMemo(() => reviews.filter(review => review.is_positive).length, [reviews]);
   const negativeCount = reviews.length - positiveCount;
   const percent = ((positiveCount / reviews.length) * 100);
 
