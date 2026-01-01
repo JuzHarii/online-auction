@@ -1,9 +1,8 @@
-import { Clock, Loader2, Info } from 'lucide-react'; // Added Info icon
+import { Clock, Loader2, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { BidHistoryItem } from '../lib/type';
 import { formatCurrency, formatDate } from './product';
 
-// Helper function to format date like in the image (DD/MM/YYYY HH:mm)
 export const formatDateTime = (dateString: Date | string) => {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-GB', {
@@ -53,7 +52,6 @@ export default function GeneralBidHistory({ id }: { id: string }) {
             Live
           </div>
         </div>
-        {/* Note about masking - similar to the image text */}
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Info size={16} />
           <p>Bidder information is partially masked for privacy.</p>
@@ -94,8 +92,8 @@ export default function GeneralBidHistory({ id }: { id: string }) {
               {bidHistory.map((bid, index) => {
                 const isTopBid = index === 0;
                 return (
-                  <tr 
-                    key={bid.id} 
+                  <tr
+                    key={bid.id}
                     className={`hover:bg-gray-50 transition-colors ${
                       isTopBid ? 'bg-amber-50/30' : ''
                     }`}
@@ -106,9 +104,11 @@ export default function GeneralBidHistory({ id }: { id: string }) {
                     <td className="px-6 py-4 text-sm font-medium text-gray-700 whitespace-nowrap">
                       {maskBidderName(bid.bidderName)}
                     </td>
-                    <td className={`px-6 py-4 text-sm font-bold whitespace-nowrap ${
+                    <td
+                      className={`px-6 py-4 text-sm font-bold whitespace-nowrap ${
                         isTopBid ? 'text-amber-600' : 'text-gray-900'
-                    }`}>
+                      }`}
+                    >
                       {formatCurrency(bid.amount.toString())}
                     </td>
                   </tr>

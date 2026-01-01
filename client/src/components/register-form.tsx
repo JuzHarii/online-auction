@@ -9,25 +9,35 @@ import ReCAPTCHA from 'react-google-recaptcha';
 // Google Auth
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 
-// 1. Zod Schema Definition
-const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
+// Zod Schema Definition
+const strongPasswordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,30}$/;
 
-const schema = z.object({
-  name: z.string().min(3, { message: 'Name must be 3–8 characters.' }).max(8, { message: 'Name must be 3–8 characters.' }),
-  email: z.string().email({ message: 'Invalid email format' }),
-  password: z.string().regex(strongPasswordRegex, {
-    message: 'Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)',
-  }),
-  confirmpassword: z.string(),
-  otp: z.string().min(1, { message: 'OTP is required' }),
-  homenumber: z.string().min(1, { message: 'House number is required' }).regex(/^\d+$/, { message: 'Home number must contain only digits.' }),
-  street: z.string().min(1, { message: 'Street is required' }),
-  province: z.string().min(1, { message: 'Province is required' }),
-  ward: z.string().min(1, { message: 'Ward is required' }),
-}).refine((data) => data.password === data.confirmpassword, {
-  message: 'Confirmation password does not match',
-  path: ['confirmpassword'],
-});
+const schema = z
+  .object({
+    name: z
+      .string()
+      .min(3, { message: 'Name must be 3–8 characters.' })
+      .max(8, { message: 'Name must be 3–8 characters.' }),
+    email: z.string().email({ message: 'Invalid email format' }),
+    password: z.string().regex(strongPasswordRegex, {
+      message:
+        'Password must contain uppercase, lowercase, number, and special character (!@#$%^&*)',
+    }),
+    confirmpassword: z.string(),
+    otp: z.string().min(1, { message: 'OTP is required' }),
+    homenumber: z
+      .string()
+      .min(1, { message: 'House number is required' })
+      .regex(/^\d+$/, { message: 'Home number must contain only digits.' }),
+    street: z.string().min(1, { message: 'Street is required' }),
+    province: z.string().min(1, { message: 'Province is required' }),
+    ward: z.string().min(1, { message: 'Ward is required' }),
+  })
+  .refine((data) => data.password === data.confirmpassword, {
+    message: 'Confirmation password does not match',
+    path: ['confirmpassword'],
+  });
 
 type Inputs = z.infer<typeof schema>;
 
@@ -44,7 +54,13 @@ export default function Register() {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const navigate = useNavigate();
 
-  const { register, watch, handleSubmit, formState: { errors }, setError } = useForm<Inputs>({
+  const {
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<Inputs>({
     resolver: zodResolver(schema),
   });
 
@@ -99,10 +115,10 @@ export default function Register() {
       if (res.ok) {
         navigate('/');
       } else {
-        alert(result.message || "Google Authentication failed");
+        alert(result.message || 'Google Authentication failed');
       }
     } catch (err) {
-      console.error("Social login error:", err);
+      console.error('Social login error:', err);
     } finally {
       setLoading(false);
     }
@@ -119,8 +135,11 @@ export default function Register() {
       });
       const result = await res.json();
       if (!res.ok) setError('email', { message: result.message });
-    } catch (err) { console.error(err); }
-    finally { setLoadingSendCode(false); }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSendCode(false);
+    }
   };
 
   // --- LOCATION LOGIC ---
@@ -129,12 +148,16 @@ export default function Register() {
   const provinceCur = watch('province');
 
   useEffect(() => {
-    fetch('/admin_new/province.json').then(res => res.json()).then(data => setProvince(Object.values(data)));
+    fetch('/admin_new/province.json')
+      .then((res) => res.json())
+      .then((data) => setProvince(Object.values(data)));
   }, []);
 
   useEffect(() => {
     if (provinceCur) {
-      fetch('admin_new/ward.json').then(res => res.json()).then(data => setWard(Object.values(data)));
+      fetch('admin_new/ward.json')
+        .then((res) => res.json())
+        .then((data) => setWard(Object.values(data)));
     }
   }, [provinceCur]);
 
@@ -144,80 +167,147 @@ export default function Register() {
   }, [provinceCur, ward]);
 
   return (
-    <GoogleOAuthProvider clientId="229504266736-tsn5rk0694t0vu0lkh65s0vj2m26mf7o.apps.googleusercontent.com" locale="en">
+    <GoogleOAuthProvider
+      clientId="229504266736-tsn5rk0694t0vu0lkh65s0vj2m26mf7o.apps.googleusercontent.com"
+      locale="en"
+    >
       <div className="p-4 sm:p-8 border border-gray-200 shadow-xl rounded-xl bg-white w-full max-w-sm sm:max-w-md mx-auto my-10">
-        <h2 className="text-2xl font-extrabold text-center mb-6 text-gray-900">Create Your Account</h2>
-        
+        <h2 className="text-2xl font-extrabold text-center mb-6 text-gray-900">
+          Create Your Account
+        </h2>
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          
           {/* Full Name */}
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-sm text-gray-700">Full Name</label>
-            <input {...register('name')} className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none" placeholder="John Doe" />
-            {errors.name && <span className="text-red-600 text-xs font-medium">{errors.name.message}</span>}
+            <input
+              {...register('name')}
+              className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none"
+              placeholder="John Doe"
+            />
+            {errors.name && (
+              <span className="text-red-600 text-xs font-medium">{errors.name.message}</span>
+            )}
           </div>
 
           {/* Email & Send OTP */}
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-sm text-gray-700">Email Address</label>
             <div className="flex gap-2">
-              <input {...register('email')} className="flex-grow px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none" placeholder="email@example.com" />
-              <button type="button" onClick={sendCode} disabled={loadingSendCode} className="bg-[#8D0000] text-white px-4 py-2 rounded-md font-bold text-xs uppercase hover:bg-red-800 transition-all">
+              <input
+                {...register('email')}
+                className="flex-grow px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none"
+                placeholder="email@example.com"
+              />
+              <button
+                type="button"
+                onClick={sendCode}
+                disabled={loadingSendCode}
+                className="bg-[#8D0000] text-white px-4 py-2 rounded-md font-bold text-xs uppercase hover:bg-red-800 transition-all"
+              >
                 {loadingSendCode ? <ClipLoader size={14} color="white" /> : 'Send Code'}
               </button>
             </div>
-            {errors.email && <span className="text-red-600 text-xs font-medium">{errors.email.message}</span>}
+            {errors.email && (
+              <span className="text-red-600 text-xs font-medium">{errors.email.message}</span>
+            )}
           </div>
 
           {/* OTP */}
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-sm text-gray-700">Verification Code (OTP)</label>
-            <input type="number" {...register('otp')} className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none" placeholder="123456" />
-            {errors.otp && <span className="text-red-600 text-xs font-medium">{errors.otp.message}</span>}
+            <input
+              type="number"
+              {...register('otp')}
+              className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none"
+              placeholder="123456"
+            />
+            {errors.otp && (
+              <span className="text-red-600 text-xs font-medium">{errors.otp.message}</span>
+            )}
           </div>
 
           {/* Location Selectors */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-700 uppercase">Province</label>
-              <select {...register('province')} className="border rounded px-2 py-2 text-sm bg-gray-50">
+              <select
+                {...register('province')}
+                className="border rounded px-2 py-2 text-sm bg-gray-50"
+              >
                 <option value="">Select city</option>
-                {province.map(p => <option key={p.code} value={p.name}>{p.name}</option>)}
+                {province.map((p) => (
+                  <option key={p.code} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-gray-700 uppercase">Ward</label>
               <select {...register('ward')} className="border rounded px-2 py-2 text-sm bg-gray-50">
                 <option value="">Select ward</option>
-                {filterWard.map(w => <option key={w.code} value={w.name}>{w.name}</option>)}
+                {filterWard.map((w) => (
+                  <option key={w.code} value={w.name}>
+                    {w.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
 
           {/* Street & House Number */}
           <div className="grid grid-cols-2 gap-3">
-             <input {...register('street')} placeholder="Street Name" className="border rounded px-3 py-2 text-sm" />
-             <input {...register('homenumber')} placeholder="House No." className="border rounded px-3 py-2 text-sm" />
+            <input
+              {...register('street')}
+              placeholder="Street Name"
+              className="border rounded px-3 py-2 text-sm"
+            />
+            <input
+              {...register('homenumber')}
+              placeholder="House No."
+              className="border rounded px-3 py-2 text-sm"
+            />
           </div>
 
           {/* Passwords */}
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-sm text-gray-700">Password</label>
-            <input type="password" {...register('password')} className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none" placeholder="********" />
-            {errors.password && <span className="text-red-600 text-xs font-medium">{errors.password.message}</span>}
+            <input
+              type="password"
+              {...register('password')}
+              className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none"
+              placeholder="********"
+            />
+            {errors.password && (
+              <span className="text-red-600 text-xs font-medium">{errors.password.message}</span>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="font-semibold text-sm text-gray-700">Confirm Password</label>
-            <input type="password" {...register('confirmpassword')} className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none" placeholder="********" />
-            {errors.confirmpassword && <span className="text-red-600 text-xs font-medium">{errors.confirmpassword.message}</span>}
+            <input
+              type="password"
+              {...register('confirmpassword')}
+              className="px-3 py-2 border rounded-md focus:ring-2 focus:ring-[#8D0000] outline-none"
+              placeholder="********"
+            />
+            {errors.confirmpassword && (
+              <span className="text-red-600 text-xs font-medium">
+                {errors.confirmpassword.message}
+              </span>
+            )}
           </div>
 
           <div className="flex justify-center scale-90 sm:scale-100 origin-center py-2">
             <ReCAPTCHA sitekey="6Lce-yosAAAAANX0klvmA9vGX6u_GknKTrz-0tzM" ref={recaptchaRef} />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full bg-[#8D0000] text-white py-3 rounded-md font-bold hover:bg-red-800 shadow-md transition-all flex justify-center items-center">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#8D0000] text-white py-3 rounded-md font-bold hover:bg-red-800 shadow-md transition-all flex justify-center items-center"
+          >
             {loading ? <ClipLoader size={20} color="white" /> : 'Register Now'}
           </button>
 
@@ -229,7 +319,7 @@ export default function Register() {
           </div>
 
           <div className="flex justify-center">
-            <GoogleLogin 
+            <GoogleLogin
               onSuccess={(res) => onGoogleSuccess(res.credential!)}
               onError={() => console.log('Google Authentication Failed')}
               theme="filled_black"
@@ -241,7 +331,9 @@ export default function Register() {
 
           <p className="text-center text-sm mt-4 text-gray-600">
             Already have an account?{' '}
-            <Link to="/signin" className="text-blue-700 font-bold hover:underline">Sign In</Link>
+            <Link to="/signin" className="text-blue-700 font-bold hover:underline">
+              Sign In
+            </Link>
           </p>
         </form>
       </div>

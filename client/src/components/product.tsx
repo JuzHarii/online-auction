@@ -257,7 +257,6 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
             <p className="text-red-600 font-semibold text-xs text-end mb-2 h-4">{timeLeft}</p>
 
             {isSeller ? (
-              /* Giao diện Seller: Merge 2 nút thành 1 khối */
               <div className="w-full h-[84px] bg-amber-50 text-amber-800 border border-amber-200 rounded flex flex-col items-center justify-center gap-1 cursor-default shadow-sm transition-colors hover:bg-amber-100">
                 <div className="flex items-center gap-2">
                   <svg
