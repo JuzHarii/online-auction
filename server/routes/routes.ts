@@ -48,7 +48,7 @@ const strongPasswordRegex =
 
 const createUserSchema = {
   [Segments.BODY]: Joi.object({
-    name: Joi.string().required().min(3).max(8),
+    name: Joi.string().required().min(3).max(50),
     email: Joi.string().email().required(),
     password: Joi.string().required().min(8).max(30).regex(strongPasswordRegex),
     code: Joi.string().required(),
