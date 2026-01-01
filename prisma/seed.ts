@@ -569,7 +569,7 @@ async function main() {
 
   for (const p of soldProducts) {
     const rand = Math.random();
-    let orderStatus = OrderStatus.pending_payment;
+    let orderStatus: OrderStatus = OrderStatus.pending_payment;
     if (rand > 0.4) orderStatus = OrderStatus.completed;
     else if (rand > 0.3) orderStatus = OrderStatus.shipped;
     else if (rand > 0.2) orderStatus = OrderStatus.payment_confirmed;
