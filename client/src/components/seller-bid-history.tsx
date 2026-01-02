@@ -87,7 +87,7 @@ export default function BidHistory({ id, onBidSuccess }: { id: string; onBidSucc
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
               <Clock size={24} className="opacity-40" />
             </div>
-            <p className="text-gray-900 font-medium">No bids yet</p>
+            <p className="text-gray-900 font-medium">No bid yet</p>
             <p className="text-xs mt-1">Be the first to place a bid!</p>
           </div>
         ) : (

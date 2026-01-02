@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ProductHeaderInfo, UserCard } from './product-header';
 import { Product } from '../lib/type';
 import { formatCurrency } from './product';
-import GeneralBidHistory from './bid-history';
+import BidderBidHistory from './bid-history';
 
 export const BidderSidebar = ({
   product,
@@ -213,7 +213,7 @@ export const BidderSidebar = ({
       </div>
 
       {/* Bid history table */}
-      <GeneralBidHistory id={product.id} />
+      <BidderBidHistory id={product.id} />
     </div>
   );
 };

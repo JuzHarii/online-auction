@@ -29,7 +29,7 @@ import {
   searchProducts,
   appendProductDescription,
 } from '../controllers/product.controllers.ts';
-import { banBidder, getBidHistory, placeBid } from '../controllers/bid.controller.ts';
+import { banBidder, getBidHistory, placeBid, getBidderProductBidHistory } from '../controllers/bid.controller.ts';
 import {
   addChat,
   addReview,
@@ -334,7 +334,8 @@ router.post(
 // Get bids of a product
 router.get(
   '/products/:id/bids',
-  productController.getProductBids
+  authController.getAuthentication,
+  getBidderProductBidHistory
 )
 
 //============================
