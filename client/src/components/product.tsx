@@ -1,6 +1,18 @@
 import { memo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+export const calculateTimeRemainingForPosted = (endTimeStr: string | null | undefined): string => {
+  if (!endTimeStr) return 'N/A';
+
+  const endDate = new Date(endTimeStr);
+
+  return endDate.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
 export const formatCurrency = (priceStr: string | null | undefined): string => {
   if (!priceStr) return '';
   const price = Number(priceStr);
@@ -13,28 +25,6 @@ export const formatDate = (dateStr: string | null | undefined): string => {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  });
-};
-
-export const formatDateTime = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleString('en-GB', {
-    weekday: 'short',
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-export const formatDateTimeLong = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleString('en-GB', {
-    dateStyle: 'long',
-    timeStyle: 'short',
   });
 };
 
@@ -67,18 +57,6 @@ export const calculateTimeRemaining = (endTimeStr: string | null | undefined): s
   return 'Ending soon';
 };
 
-export const calculateTimeRemainingForPosted = (endTimeStr: string | null | undefined): string => {
-  if (!endTimeStr) return 'N/A';
-
-  const endDate = new Date(endTimeStr);
-
-  return endDate.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-};
-
 export type Product = {
   id?: string | number;
   name: string;
@@ -107,8 +85,11 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
     isSeller,
   } = product;
 
-  const [timeLeft, setTimeLeft] = useState(() => calculateTimeRemaining(end_time));
+  // 1. Thêm logic kiểm tra xem đã hết giờ chưa
+  // Sử dụng Date.now() để so sánh thời gian thực
+  const isEnded = new Date(end_time).getTime() < Date.now();
 
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeRemaining(end_time));
   const [inWatchList, setInWatchList] = useState(!!product.isWatchlisted);
   const [isWatchLoading, setIsWatchLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,11 +117,10 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (isWatchLoading || isSeller) return;
+    if (isWatchLoading || isSeller || isEnded) return; // Chặn thêm nếu đã end
     setIsWatchLoading(true);
 
     const endpoint = inWatchList ? `/api/watch-list/${id}` : '/api/watch-list/add';
-
     const method = inWatchList ? 'DELETE' : 'POST';
 
     try {
@@ -151,7 +131,6 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
       });
 
       if (!response.ok) throw new Error('Failed to update watch list');
-
       setInWatchList(!inWatchList);
     } catch (error: any) {
       console.error(error);
@@ -163,8 +142,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
 
   const handleBuyNowClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-
-    if (!canBuyNow) return;
+    if (!canBuyNow || isEnded) return; // Chặn mua nếu đã end
 
     if (confirm(`Buy now for ${formatCurrency(buy_now_price)}?`)) {
       setIsSubmitting(true);
@@ -185,6 +163,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
     }
   };
 
+  // Logic useDiffTimer giữ nguyên
   function useDiffTimer(created_at: string) {
     const [diff, setDiff] = useState(() => {
       return (Date.now() - new Date(created_at).getTime()) / 1000 / 60;
@@ -192,13 +171,10 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
 
     useEffect(() => {
       if (diff > 10) return;
-
       const msLeft = (10 - diff) * 60 * 1000;
-
       const timeout = setTimeout(() => {
         setDiff((Date.now() - new Date(created_at).getTime()) / 1000 / 60);
       }, msLeft);
-
       return () => clearTimeout(timeout);
     }, [created_at, diff]);
 
@@ -216,6 +192,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
             : 'border border-gray-200 shadow-sm'
         } p-2 rounded-md overflow-hidden flex flex-col transition-shadow h-full bg-white group hover:shadow-md`}
       >
+        {/* Phần ảnh giữ nguyên */}
         <div className="relative w-full aspect-4/3 bg-gray-100 shrink-0">
           <img
             src={
@@ -256,6 +233,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
           <div className="mt-auto">
             <p className="text-red-600 font-semibold text-xs text-end mb-2 h-4">{timeLeft}</p>
 
+            {/* 2. Logic hiển thị các nút */}
             {isSeller ? (
               <div className="w-full h-[84px] bg-amber-50 text-amber-800 border border-amber-200 rounded flex flex-col items-center justify-center gap-1 cursor-default shadow-sm transition-colors hover:bg-amber-100">
                 <div className="flex items-center gap-2">
@@ -276,7 +254,14 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
                   <span className="text-[11px] opacity-80">You are the seller</span>
                 </div>
               </div>
+            ) : isEnded ? (
+              // UI KHI AUCTION KẾT THÚC: Ẩn các nút chức năng, hiện thông báo
+              <div className="w-full h-[84px] bg-gray-100 text-gray-500 border border-gray-200 rounded flex flex-col items-center justify-center gap-1 cursor-default">
+                <span className="font-bold text-sm">Auction Ended</span>
+                <span className="text-[10px]">No longer accepting bids</span>
+              </div>
             ) : (
+              // UI KHI AUCTION CÒN HOẠT ĐỘNG
               <>
                 <button
                   onClick={handleToggleWatchList}
@@ -292,6 +277,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
                     <span className="text-xs">Updating...</span>
                   ) : inWatchList ? (
                     <>
+                      {/* SVG Remove */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4 fill-current"
@@ -307,6 +293,7 @@ export const MemoProductCard = memo(({ product }: { product: Product }) => {
                     </>
                   ) : (
                     <>
+                      {/* SVG Add */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4"

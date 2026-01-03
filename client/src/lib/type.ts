@@ -61,6 +61,9 @@ export interface Product {
   relatedProducts?: RelatedProduct[];
   isWatchlisted: boolean;
   orderId: number;
+  review_needed: boolean;
+  allow_unrated_bidder: boolean,
+
 }
 
 export interface BidHistoryItem {

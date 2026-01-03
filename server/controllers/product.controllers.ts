@@ -480,6 +480,8 @@ export const getProduct = async (req: Request, res: Response) => {
       isWatchlisted: isWatchlisted,
 
       relatedProducts: relatedProducts,
+      allow_unrated_bidder: productData.allow_unrated_bidder,
+      review_needed: productData.review_needed,
     };
 
     res.setHeader('Content-Type', 'application/json');
