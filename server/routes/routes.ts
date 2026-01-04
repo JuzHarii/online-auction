@@ -266,11 +266,11 @@ router.delete(
   userControllers.deleteWatchlistProduct
 );
 
-router.delete(
-  '/seller-list/:product_id',
-  authController.getAuthentication,
-  userControllers.deleteSellerlistProduct
-);
+// router.delete(
+//   '/seller-list/:product_id',
+//   authController.getAuthentication,
+//   userControllers.deleteSellerlistProduct
+// );
 
 router.post(
   '/profile/role',
@@ -294,18 +294,6 @@ router.put(
   authController.getAuthentication,
   ReviewController.update
 ),
-
-router.post(
-  '/rate',
-  authController.getAuthentication,
-  ReviewController.rate
-),
-
-router.post(
-  '/comment',
-  authController.getAuthentication,
-  ReviewController.comment
-)
 
 router.post(
   '/order/cancel/:id',

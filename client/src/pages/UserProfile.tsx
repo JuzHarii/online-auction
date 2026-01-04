@@ -64,15 +64,12 @@ export default function UserProfile() {
 
   return (
     <div className="w-[90%] max-w-7xl mx-auto pb-10">
-      {/* TITLE */}
       <h1 className="text-center text-3xl md:text-4xl font-bold text-[#8D0000] mt-8 md:mt-10">
         Welcome, {profile.name}!
       </h1>
 
-      {/* MAIN LAYOUT: Flex Column on Mobile, Flex Row on Desktop */}
       <div className="my-8 flex flex-col lg:flex-row gap-6 md:gap-8 items-start">
         
-        {/* --- LEFT SIDEBAR (PROFILE CARD) --- */}
         <div className="
           w-full lg:w-[350px] lg:shrink-0
           bg-white rounded-md border border-gray-200 
@@ -80,7 +77,6 @@ export default function UserProfile() {
           self-start
         ">
           
-          {/* 1. Header: Avatar + Name */}
           <div className="flex flex-row items-center gap-4 mb-6">
             <div className="bg-[#FAE5E5] rounded-full w-14 h-14 shrink-0 flex items-center justify-center p-2">
               <User2 className="text-[#8D0000] w-full h-full" />
@@ -97,7 +93,6 @@ export default function UserProfile() {
 
           <hr className="border-gray-200 my-4" />
 
-          {/* 2. Info Grid */}
           <div className="grid grid-cols-2 gap-y-3 text-sm md:text-base text-gray-700 mb-6">
             <span className="font-semibold text-gray-500">Role</span>
             <span className="text-right font-medium capitalize">{profile.role}</span>
@@ -108,15 +103,12 @@ export default function UserProfile() {
             </span>
           </div>
 
-          {/* 3. Seller Status (Full width) */}
           {profile.role === 'seller' && (
             <div className="mb-4">
               <SellerStatus />
             </div>
           )}
 
-          {/* 4. Action Buttons Group */}
-          {/* Mobile: Grid 2 cột | Desktop: Xếp dọc */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col gap-3">
             
             <button
@@ -188,7 +180,6 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* --- RIGHT CONTENT (TABS) --- */}
         <UserAction profile={profile} action={action} setAction={setAction} />
 
       </div>

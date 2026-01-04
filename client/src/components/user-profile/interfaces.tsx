@@ -155,5 +155,4 @@ export interface Reviews {
   reviews: Review[];
 }
 
-export type SetTab = (tab: 'bidding' | 'won-products' | 'watchlist' | 'ratings') => void;
 export type SetAction = (action: 'view-tabs' | 'edit-profile' | 'change-password') => void;

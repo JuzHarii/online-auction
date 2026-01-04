@@ -3,8 +3,6 @@ import { PrismaClient } from '@prisma/client';
 import { ProductStatus, OrderStatus, UserRole } from '@prisma/client';
 import { errorResponse, successResponse } from '../utils/response';
 import { UserServices } from '../services/user.services';
-import { calculateRating } from './product.controllers.ts';
-import { number } from 'zod';
 
 const prisma = new PrismaClient();
 
@@ -17,13 +15,6 @@ export interface Profile {
   created_at: string;
   plus_review: number;
   minus_review: number;
-  // total_bids: number;
-  // bids_this_week: number;
-  // total_wins: number;
-  // win_rate: number;
-  // watchlist_count: number;
-  // rating: number;
-  // rating_label: string;
 }
 
 export interface ProductCard {
@@ -165,27 +156,6 @@ export interface Reviews {
   reviews: Review[];
 }
 
-export interface CreateReviewRequest {
-  is_positive: boolean;
-  comment: string;
-}
-
-export interface CreateReviewResponse {
-  success: boolean;
-  review_id: string;
-}
-
-// Request body rỗng hoặc chứa lý do (nhưng logic "auto -1" được fix cứng ở Backend)
-export interface CancelOrderRequest {
-  reason?: string; // Optional, nhưng requirement bảo fix cứng nội dung
-}
-
-export interface CancelOrderResponse {
-  success: boolean;
-  message: string;
-  review_created_id: string; // ID của review tiêu cực vừa tạo tự động
-}
-
 export const getMyProfile = async (req: Request, res: Response) => {
   try {
     const user_id = res.locals.user.id;
@@ -221,25 +191,18 @@ export const editUserProfile = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized: Can't find user" });
     }
 
-    // 2. Lấy dữ liệu từ body
     const { name, email, birthdate, address } = req.body as {
       name?: string;
       email?: string;
-      birthdate?: string; // format: "1999-12-31"
+      birthdate?: string;
       address?: string;
     };
 
-    // 3. Validate cơ bản
     if (!name && !email && !address && !birthdate) {
-      return res.status(400).json({ message: 'No personal data to change' });
+      return res.status(400).json(errorResponse('No personal data to change'));
     }
 
     const updateData: any = {};
-
-    if (name) {
-      if (name.trim().length < 2) return res.status(400).json({ message: 'Name is too short' });
-      updateData.name = name.trim();
-    }
 
     if (email) {
       updateData.email = email.trim().toLowerCase();
@@ -252,12 +215,10 @@ export const editUserProfile = async (req: Request, res: Response) => {
     if (birthdate) {
       const date = new Date(birthdate);
       if (isNaN(date.getTime())) {
-        return res.status(400).json({ message: 'Invalid birthdate format' });
+        return res.status(400).json(errorResponse('Invalid birthdate format'));
       }
       updateData.birthdate = date;
     }
-
-    console.log(updateData);
 
     const updatedUser = await prisma.user.update({
       where: { user_id: userId },
@@ -272,8 +233,6 @@ export const editUserProfile = async (req: Request, res: Response) => {
       },
     });
 
-    console.log(updatedUser);
-
     return res.status(200).json({
       message: 'Cập nhật hồ sơ thành công!',
       user: {
@@ -282,18 +241,15 @@ export const editUserProfile = async (req: Request, res: Response) => {
       },
     });
   } catch (e: any) {
-    // Xử lý lỗi Prisma
     if (e.code === 'P2025') {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json(errorResponse('User not found'));
     }
 
-    // P2002: Unique constraint violation (Lỗi trùng Email)
     if (e.code === 'P2002' && e.meta?.target?.includes('email')) {
-      return res.status(409).json({ message: 'Email already exists' });
+      return res.status(409).json(errorResponse('Email already exists'));
     }
 
-    console.log('Failed rồi\n');
-    return res.status(500).json(errorResponse(e));
+    return res.status(500).json(errorResponse(e.message));
   }
 };
 
@@ -333,44 +289,44 @@ export const deleteWatchlistProduct = async (req: Request, res: Response) => {
   }
 };
 
-export const deleteSellerlistProduct = async (req: Request, res: Response) => {
-  try {
-    const user_id = res.locals.user.id;
-    if (!user_id) {
-      return res.status(401).json({ message: "Unauthorized: Can't find user" });
-    }
+// export const deleteSellerlistProduct = async (req: Request, res: Response) => {
+//   try {
+//     const user_id = res.locals.user.id;
+//     if (!user_id) {
+//       return res.status(401).json(errorResponse("Unauthorized: Can't find user"));
+//     }
 
-    const { product_id } = req.params;
-    if (!product_id) {
-      return res.status(400).json({ message: 'Product ID is required' });
-    }
+//     const { product_id } = req.params;
+//     if (!product_id) {
+//       return res.status(400).json(errorResponse('Product ID is required'));
+//     }
 
-    const result = await prisma.product.updateMany({
-      where: {
-        seller_id: user_id,
-        product_id: BigInt(product_id),
-      },
-      data: {
-        status: ProductStatus.removed,
-      },
-    });
+//     const result = await prisma.product.updateMany({
+//       where: {
+//         seller_id: user_id,
+//         product_id: BigInt(product_id),
+//       },
+//       data: {
+//         status: ProductStatus.removed,
+//       },
+//     });
 
-    if (result.count === 0) {
-      return res.status(404).json({ message: 'Product not found in your watchlist' });
-    }
+//     if (result.count === 0) {
+//       return res.status(404).json({ message: 'Product not found in your watchlist' });
+//     }
 
-    return res.status(200).json({ message: 'Removed product from watchlist successfully' });
-  } catch (error) {
-    console.error('Delete seller list error:', error);
+//     return res.status(200).json({ message: 'Removed product from watchlist successfully' });
+//   } catch (error) {
+//     console.error('Delete seller list error:', error);
 
-    // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
-    if (error instanceof SyntaxError || (error as any).code === 'P2002') {
-      return res.status(400).json({ message: 'Invalid Product ID format' });
-    }
+//     // Xử lý lỗi convert BigInt nếu user gửi id linh tinh (vd: "abc")
+//     if (error instanceof SyntaxError || (error as any).code === 'P2002') {
+//       return res.status(400).json({ message: 'Invalid Product ID format' });
+//     }
 
-    return res.status(500).json(errorResponse(String(error)));
-  }
-};
+//     return res.status(500).json(errorResponse(String(error)));
+//   }
+// };
 
 export const requestRole = async (req: Request, res: Response) => {
   try {

@@ -46,7 +46,6 @@ function EditProfile({ profile, setAction }: { profile: Profile; setAction: SetA
 
     if (typeof dateInput === 'string' && dateInput.includes('/')) {
       const parts = dateInput.split('/');
-      // assume D/M/YYYY
       if (parts.length === 3) {
         let d = parts[1].padStart(2, '0');
         let m = parts[0].padStart(2, '0');
