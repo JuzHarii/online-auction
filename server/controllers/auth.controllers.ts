@@ -134,7 +134,7 @@ export const getSellerAuthentication = async (req: Request, res: Response, next:
     const decoded = jwt.verify(token, secret) as JwtPayload;
     
     const user = await db.prisma.user.findUnique({
-      where: { user_id: decoded.id },
+      where: { email: decoded.email },
     });
 
     if (!user) {
