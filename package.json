@@ -8,7 +8,7 @@
     "build:server": "cd server && npm run build",
     "build:client": "vite build",
     "build": "npm run build:client && npm run build:server",
-    "start": "npm run build && cd server/dist && node src/server.js",
+    "start": "cd server/dist && node src/server.js",
     "server": "cd server && npm run dev",
     "client": "vite",
     "dev": "concurrently \"npm run server\" \"npm run client\"",

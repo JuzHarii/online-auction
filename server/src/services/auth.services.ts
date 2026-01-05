@@ -1,5 +1,5 @@
 import db from './database';
-import * as mailService from '../services/mail.service';
+import * as mailService from './mail.service';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 
