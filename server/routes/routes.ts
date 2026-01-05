@@ -232,18 +232,6 @@ router.get(
 );
 
 router.get(
-  '/profile/reviews-from-buyers',
-  authController.getAuthentication,
-  UserControllers.BidderControllers.getReviewsFromBuyers
-);
-
-router.get(
-  '/profile/reviews-from-sellers',
-  authController.getAuthentication,
-  UserControllers.BidderControllers.getReviewsFromSellers
-);
-
-router.get(
   '/profile/sellings',
   authController.getSellerAuthentication,
   UserControllers.SellerControllers.getSellerProducts
@@ -266,12 +254,6 @@ router.delete(
   authController.getAuthentication,
   userControllers.deleteWatchlistProduct
 );
-
-// router.delete(
-//   '/seller-list/:product_id',
-//   authController.getAuthentication,
-//   userControllers.deleteSellerlistProduct
-// );
 
 router.post('/profile/role', authController.getAuthentication, userControllers.requestRole);
 router.get(

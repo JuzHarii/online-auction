@@ -1,4 +1,3 @@
-import { count } from 'console';
 import db from './database.ts';
 import { ProductStatus, OrderStatus } from '@prisma/client';
 
@@ -175,82 +174,6 @@ export const UserServices = {
       return db.prisma.reviews.findMany({
         where: {
           reviewee_id: user_id,
-        },
-        select: {
-          review_id: true,
-          reviewer: {
-            select: {
-              user_id: true,
-              name: true,
-            },
-          },
-          product: {
-            select: {
-              product_id: true,
-              name: true,
-
-              category: {
-                select: {
-                  category_id: true,
-                  name_level_1: true,
-                  name_level_2: true,
-                },
-              },
-
-              images: { take: 1, select: { image_url: true } },
-            },
-          },
-
-          is_positive: true,
-          comment: true,
-          created_at: true,
-        },
-      });
-    },
-
-    getReviewsFromBuyers: async (user_id: string) => {
-      return db.prisma.reviews.findMany({
-        where: {
-          reviewee_id: user_id,
-          order_as_buyer_review: { isNot: null },
-        },
-        select: {
-          review_id: true,
-          reviewer: {
-            select: {
-              user_id: true,
-              name: true,
-            },
-          },
-          product: {
-            select: {
-              product_id: true,
-              name: true,
-
-              category: {
-                select: {
-                  category_id: true,
-                  name_level_1: true,
-                  name_level_2: true,
-                },
-              },
-
-              images: { take: 1, select: { image_url: true } },
-            },
-          },
-
-          is_positive: true,
-          comment: true,
-          created_at: true,
-        },
-      });
-    },
-
-    getReviewsFromSellers: async (user_id: string) => {
-      return db.prisma.reviews.findMany({
-        where: {
-          reviewee_id: user_id,
-          order_as_seller_review: { isNot: null },
         },
         select: {
           review_id: true,
