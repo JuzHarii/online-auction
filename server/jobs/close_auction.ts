@@ -12,7 +12,7 @@ export function startAuctionCloser() {
     try {
       console.log('[AuctionCloser] running at', now.toISOString());
 
-      // 1️⃣ Đấu giá có người bid → sold
+      // Đấu giá có người bid → sold
       // Fetch products that need to be marked as sold
       const productsToSell = await db.prisma.product.findMany({
         where: {
@@ -64,7 +64,7 @@ export function startAuctionCloser() {
         }
       }
 
-      // 2️⃣ Không có ai bid → expired
+      // Không có ai bid → expired
       // Fetch products that need to be marked as expired
       const productsToExpire = await db.prisma.product.findMany({
         where: {

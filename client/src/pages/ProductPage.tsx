@@ -25,7 +25,6 @@ const ProductPage = () => {
   const [isSavingDesc, setIsSavingDesc] = useState(false);
 
   const navigate = useNavigate();
-  const redirected = useRef(false);
 
   const fetchProduct = async () => {
     try {
@@ -37,10 +36,7 @@ const ProductPage = () => {
       const data: Product = await res.json();
 
       if (data.orderId !== null) {
-        if (!redirected.current) {
-          redirected.current = true;
-          navigate(`/payment/${data.orderId}`);
-        }
+        navigate(`/payment/${data.orderId}`, { replace: true });
         return;
       }
       setProduct(data);
