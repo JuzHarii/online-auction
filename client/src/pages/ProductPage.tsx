@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Share2, Heart, ChevronRight, Plus, Pencil } from 'lucide-react'; // Removed unused imports
 import { ClipLoader } from 'react-spinners';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -25,6 +25,7 @@ const ProductPage = () => {
   const [isSavingDesc, setIsSavingDesc] = useState(false);
 
   const navigate = useNavigate();
+  const redirected = useRef(false);
 
   const fetchProduct = async () => {
     try {
@@ -36,7 +37,11 @@ const ProductPage = () => {
       const data: Product = await res.json();
 
       if (data.orderId !== null) {
-        navigate(`/payment/${data.orderId}`);
+        if (!redirected.current) {
+          redirected.current = true;
+          navigate(`/payment/${data.orderId}`);
+        }
+        return;
       }
       setProduct(data);
       if (data.images && data.images.length > 0) {

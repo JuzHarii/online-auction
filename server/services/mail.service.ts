@@ -44,13 +44,12 @@ export const send = async (data: Data) => {
     from: process.env.MAIL,
     to: email,
     subject: 'ThinkLab verification email',
-    // text: `${code} is your verification code, valid for 5 minutes. Welcome! To keep your account safe, never forward this code.`,
     html: `
     <div style="font-family: sans-serif; padding: 20px;">
       <h3 style="color: #333;">ThinkLab Verification</h3>
       <p>Your verification code is:</p>
       <h1 style="color: #8D0000; letter-spacing: 5px; margin: 10px 0;">${code}</h1>
-      <p style="color: #666; font-size: 14px;">Valid for 5 minutes. Do not share this code.</p>
+      <p style="color: #666; font-size: 14px;">Valid for 4 minutes. Do not share this code.</p>
     </div>
   `,
   };
@@ -173,9 +172,7 @@ export const sendNewBidEmail = async (
               Your bid has been placed successfully for:
             </p>
             <div style="background: #f0f8ff; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4CAF50;">
-              <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
-              <p style="margin: 0; font-size: 14px; color: #666;">Your Bid:</p>
-              <h3 style="margin: 5px 0 0 0; color: #4CAF50; font-size: 28px;">${price} USD</h3>
+              <h2 style="margin: 0 0 10px 0; color: #333;">${productName}</h2>
             </div>
             <div style="background: #fffbea; padding: 15px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffa500;">
               <p style="margin: 0; font-size: 14px; color: #856404;">
@@ -183,7 +180,7 @@ export const sendNewBidEmail = async (
               </p>
             </div>
             <div style="text-align: center; margin-top: 30px;">
-              <a href="${productLink}" style="display: inline-block; background: #4CAF50; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Track Product →</a>
+              <a href="${productLink}" style="display: inline-block; background: #4CAF50; color: white; padding: 14px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Product →</a>
             </div>
           </div>
           <div style="text-align: center; padding: 20px; font-size: 12px; color: #999;">
@@ -210,9 +207,7 @@ export const sendNewBidEmail = async (
                 Someone just placed a higher bid than yours on:
               </p>
               <div style="background: #fff5f5; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ff6b6b;">
-                <h3 style="margin: 0 0 10px 0; color: #333;">${productName}</h3>
-                <p style="margin: 0; font-size: 14px; color: #666;">Current Price:</p>
-                <h3 style="margin: 5px 0 0 0; color: #ff6b6b; font-size: 28px;">${price} USD</h3>
+                <h2 style="margin: 0 0 10px 0; color: #333;">${productName}</h2>
               </div>
               <div style="background: #e8f5e9; padding: 15px; margin: 20px 0; border-radius: 5px;">
                 <p style="margin: 0; font-size: 14px; color: #2e7d32;">
