@@ -5,6 +5,8 @@ import { ClipLoader } from 'react-spinners';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import ReCAPTCHA from 'react-google-recaptcha';
+import provinceData from '../../admin_new/province.json';
+import wardData from '../../admin_new/ward.json';
 
 // Google Auth
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
@@ -142,23 +144,56 @@ export default function Register() {
     }
   };
 
-  // --- LOCATION LOGIC ---
   const [province, setProvince] = useState<LocationOption[]>([]);
   const [ward, setWard] = useState<LocationOption[]>([]);
   const provinceCur = watch('province');
 
+  interface provinceType {
+    name: string;
+    slug: string;
+    type: string;
+    name_with_type: string;
+    code: number;
+    codename: string;
+    path_with_type: string;
+  }
+
+  const provinces: provinceType[] = Object.values(provinceData).map((item) => ({
+    name: item.name,
+    slug: item.slug,
+    type: item.type,
+    name_with_type: item.name_with_type,
+    code: Number(item.code),
+    codename: item.code,
+    path_with_type: item.name_with_type,
+  }));
+
+  interface wardType {
+    name: string;
+    slug: string;
+    type: string;
+    name_with_type: string;
+    code: number;
+    codename: string;
+    path_with_type: string;
+  }
+
+  const wards: wardType[] = Object.values(wardData).map((item) => ({
+    name: item.name,
+    slug: item.slug,
+    type: item.type,
+    name_with_type: item.name_with_type,
+    code: Number(item.code),
+    codename: item.code,
+    path_with_type: item.path_with_type,
+  }));
+
   useEffect(() => {
-    fetch('/admin_new/province.json')
-      .then((res) => res.json())
-      .then((data) => setProvince(Object.values(data)));
+    setProvince(provinces);
   }, []);
 
   useEffect(() => {
-    if (provinceCur) {
-      fetch('admin_new/ward.json')
-        .then((res) => res.json())
-        .then((data) => setWard(Object.values(data)));
-    }
+    setProvince(wards);
   }, [provinceCur]);
 
   const filterWard = useMemo(() => {
@@ -172,6 +207,10 @@ export default function Register() {
       locale="en"
     >
       <div className="p-4 sm:p-8 border border-gray-200 shadow-xl rounded-xl bg-white w-full max-w-sm sm:max-w-md mx-auto my-10">
+        <h2 className="text-2xl font-extrabold text-center mb-6 text-gray-900">
+          Create Your Account
+        </h2>
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           {/* Full Name */}
           <div className="flex flex-col gap-1">

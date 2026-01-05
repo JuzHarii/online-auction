@@ -7,6 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ClipLoader } from 'react-spinners';
 import { LocationOption } from '../register-form';
 import PasswordVerification from './password-verification';
+import provinceData from '../../../admin_new/province.json';
+import wardData from '../../../admin_new/ward.json';
 
 const schema = z.object({
   name: z
@@ -14,18 +16,25 @@ const schema = z.object({
     .min(3, { message: 'Name must be 3–50 characters.' })
     .max(50, { message: 'Name must be 3–50 characters.' }),
   email: z.string().trim().email({ message: 'Invalid email format' }),
-  birthdate: z.string().nullable().optional().refine((dateString) => {
-    if (!dateString) return true;
+  birthdate: z
+    .string()
+    .nullable()
+    .optional()
+    .refine(
+      (dateString) => {
+        if (!dateString) return true;
 
-    const date = new Date(dateString);
-    
-    if (isNaN(date.getTime())) return false;
+        const date = new Date(dateString);
 
-    const now = new Date();
-    return date <= now;
-  }, { 
-    message: "Birthdate must be in the past." 
-  }),
+        if (isNaN(date.getTime())) return false;
+
+        const now = new Date();
+        return date <= now;
+      },
+      {
+        message: 'Birthdate must be in the past.',
+      }
+    ),
   homenumber: z
     .string()
     .min(1, { message: 'House number is required' })
@@ -51,17 +60,15 @@ export const getAddressParts = (fullAddress?: string | null) => {
   };
 };
 
-function EditProfile(
-  { 
-    profile, 
-    setAction,
-    setProfile
-  } : {
-    profile: Profile; 
-    setAction: SetAction;
-    setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
-  }) 
-{
+function EditProfile({
+  profile,
+  setAction,
+  setProfile,
+}: {
+  profile: Profile;
+  setAction: SetAction;
+  setProfile: React.Dispatch<React.SetStateAction<Profile | null>>;
+}) {
   const formatDateForInput = (dateInput?: string | Date | null) => {
     if (!dateInput) return '';
     const date = new Date(dateInput);
@@ -101,6 +108,46 @@ function EditProfile(
   const provinceCur = watch('province');
   const wardCurr = watch('ward');
 
+  interface provinceType {
+    name: string;
+    slug: string;
+    type: string;
+    name_with_type: string;
+    code: number;
+    codename: string;
+    path_with_type: string;
+  }
+
+  const provinces: provinceType[] = Object.values(provinceData).map((item) => ({
+    name: item.name,
+    slug: item.slug,
+    type: item.type,
+    name_with_type: item.name_with_type,
+    code: Number(item.code),
+    codename: item.code,
+    path_with_type: item.name_with_type,
+  }));
+
+  interface wardType {
+    name: string;
+    slug: string;
+    type: string;
+    name_with_type: string;
+    code: number;
+    codename: string;
+    path_with_type: string;
+  }
+
+  const wards: wardType[] = Object.values(wardData).map((item) => ({
+    name: item.name,
+    slug: item.slug,
+    type: item.type,
+    name_with_type: item.name_with_type,
+    code: Number(item.code),
+    codename: item.code,
+    path_with_type: item.path_with_type,
+  }));
+
   const fetchJsonData = async (url: string) => {
     const res = await fetch(url);
     if (!res.ok) {
@@ -111,14 +158,7 @@ function EditProfile(
   };
 
   function loadProvince() {
-    fetchJsonData('../admin_new/province.json')
-      .then((data) => {
-        console.log(data);
-        setProvince(data);
-      })
-      .catch((error) => {
-        console.error('Fetch province error:', error);
-      });
+    setProvince(provinces);
   }
 
   function loadWard() {
@@ -127,13 +167,7 @@ function EditProfile(
       return;
     }
 
-    fetchJsonData('../admin_new/ward.json')
-      .then((data) => {
-        setWard(data);
-      })
-      .catch((error) => {
-        console.error('Fetch ward error:', error);
-      });
+    setWard(ward);
   }
 
   watch('province');
@@ -156,7 +190,7 @@ function EditProfile(
 
       const res = await fetch('/api/profile', {
         method: 'PATCH',
-        headers: {'Content-Type': 'application/json'},
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: data.name,
           email: data.email,
@@ -169,10 +203,9 @@ function EditProfile(
 
       if (!res.ok || result.isSuccess === false) {
         alert('Edited profile failed! Resetting to default...');
-        if (result.errorField === 'email') 
-          setError('email', { message: result.message });
+        if (result.errorField === 'email') setError('email', { message: result.message });
 
-        const originalAddress = getAddressParts(profile.address)
+        const originalAddress = getAddressParts(profile.address);
 
         reset({
           name: profile.name,
@@ -197,7 +230,6 @@ function EditProfile(
         setPendingData(null);
         setIsDisable(true);
       }
-
     } catch (err) {
       console.error('[v0] Update error:', err);
       alert('An unexpected error occurred');
@@ -721,7 +753,7 @@ export default function UserAction({
   const renderAction = () => {
     switch (action) {
       case 'edit-profile':
-        return <EditProfile profile={profile} setAction={setAction} setProfile={ setProfile }/>;
+        return <EditProfile profile={profile} setAction={setAction} setProfile={setProfile} />;
       case 'change-password':
         return <ChangePassword profile={profile} setAction={setAction} />;
       case 'request-role':
