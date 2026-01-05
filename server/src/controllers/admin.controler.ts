@@ -1,7 +1,7 @@
-import * as productService from '../services/product.services.ts';
-import { errorResponse, successResponse } from '../utils/response.ts';
+import * as productService from '../services/product.services';
+import { errorResponse, successResponse } from '../utils/response';
 import { Request, Response } from 'express';
-import db from '../services/database.ts';
+import db from '../services/database';
 
 export const getAdCatergories = async (req: Request, res: Response) => {
   try {

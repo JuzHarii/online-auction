@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { errorResponse, successResponse } from '../utils/response.ts';
+import { errorResponse, successResponse } from '../utils/response';
 import {
   getOrderService,
   changeOrderService,
@@ -7,7 +7,7 @@ import {
   addChatService,
   getChatService,
   getOrderImageService,
-} from '../services/payment.services.ts';
+} from '../services/payment.services';
 import { Readable } from 'stream';
 
 /* ================= GET ORDER ================= */

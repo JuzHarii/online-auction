@@ -1,4 +1,4 @@
-import db from './database.ts';
+import db from './database';
 import { ProductStatus, OrderStatus } from '@prisma/client';
 
 export const UserServices = {

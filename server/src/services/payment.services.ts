@@ -1,6 +1,6 @@
-import db from './database.ts';
+import db from './database';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { BUCKET_NAME, s3Client } from '../config/s3.ts';
+import { BUCKET_NAME, s3Client } from '../config/s3';
 
 /* ================= GET ORDER ================= */
 export const getOrderService = async (orderid: string, curUser: any) => {

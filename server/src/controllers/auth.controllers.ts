@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
-import * as authService from '../services/auth.services.ts';
-import { errorResponse, successResponse } from '../utils/response.ts';
+import * as authService from '../services/auth.services';
+import { errorResponse, successResponse } from '../utils/response';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import db from '../services/database.ts';
-import { getOrderByUserID } from '../services/payment.services.ts';
+import db from '../services/database';
+import { getOrderByUserID } from '../services/payment.services';
 
 export const register = async (req: Request, res: Response) => {
   try {

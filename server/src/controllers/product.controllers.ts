@@ -1,14 +1,14 @@
-import db from '../services/database.ts';
+import db from '../services/database';
 import type { Request, Response } from 'express';
-import { errorResponse, successResponse } from '../utils/response.ts';
-import * as productService from '../services/product.services.ts';
+import { errorResponse, successResponse } from '../utils/response';
+import * as productService from '../services/product.services';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { BUCKET_NAME, s3Client } from '../config/s3.ts';
+import { BUCKET_NAME, s3Client } from '../config/s3';
 import { Readable } from 'stream';
 import { Prisma } from '@prisma/client';
 
-import * as mailService from '../services/mail.service.ts';
-import { getOrderByProductID } from '../services/payment.services.ts';
+import * as mailService from '../services/mail.service';
+import { getOrderByProductID } from '../services/payment.services';
 
 export const uploadProducts = async (req: Request, res: Response) => {
   try {

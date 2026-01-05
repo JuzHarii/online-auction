@@ -1,6 +1,5 @@
-import { Prisma } from '@prisma/client';
-import db from './database.ts';
-import * as mailService from '../services/mail.service.ts';
+import db from './database';
+import * as mailService from '../services/mail.service';
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 

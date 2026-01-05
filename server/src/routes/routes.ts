@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
-import * as authController from '../controllers/auth.controllers.ts';
+import * as authController from '../controllers/auth.controllers';
 import { celebrate, Joi, Segments } from 'celebrate';
-import * as emailController from '../controllers/email.controller.ts';
-import * as productController from '../controllers/product.controllers.ts';
+import * as emailController from '../controllers/email.controller';
+import * as productController from '../controllers/product.controllers';
 import {
   addCategory,
   deleteCategory,
@@ -17,9 +17,9 @@ import {
   responseUpgradeRequest,
   updateAuctionConfig,
   updateCategory,
-} from '../controllers/admin.controler.ts';
-import * as userControllers from '../controllers/user.controllers.ts';
-import { UserControllers } from '../controllers/user.controllers.ts';
+} from '../controllers/admin.controler';
+import * as userControllers from '../controllers/user.controllers';
+import { UserControllers } from '../controllers/user.controllers';
 import {
   getProduct,
   getProductsEndest,
@@ -28,13 +28,13 @@ import {
   replyProductQA,
   searchProducts,
   appendProductDescription,
-} from '../controllers/product.controllers.ts';
+} from '../controllers/product.controllers';
 import {
   banBidder,
   getBidHistory,
   placeBid,
   getBidderProductBidHistory,
-} from '../controllers/bid.controller.ts';
+} from '../controllers/bid.controller';
 import {
   addChat,
   addReview,
@@ -42,9 +42,9 @@ import {
   getChat,
   getOrder,
   getOrderImage,
-} from '../controllers/payment.controller.ts';
-import { ReviewController } from '../controllers/review.controller.ts';
-import { OrderController } from '../controllers/order.controller.ts';
+} from '../controllers/payment.controller';
+import { ReviewController } from '../controllers/review.controller';
+import { OrderController } from '../controllers/order.controller';
 
 const router = express.Router();
 

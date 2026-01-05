@@ -1,9 +1,9 @@
 import { Prisma } from '@prisma/client';
-import db from '../services/database.ts';
+import db from '../services/database';
 import type { Request, Response } from 'express';
-import { sendNewBidEmail, sendBidRejectedEmail } from '../services/mail.service.ts';
-import { successResponse, errorResponse } from '../utils/response.ts';
-import { getProductBids } from '../services/product.services.ts';
+import { sendNewBidEmail, sendBidRejectedEmail } from '../services/mail.service';
+import { successResponse, errorResponse } from '../utils/response';
+import { getProductBids } from '../services/product.services';
 
 interface BidHistoryItem {
   id: string;

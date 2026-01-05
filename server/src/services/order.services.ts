@@ -1,4 +1,4 @@
-import db from './database.ts';
+import db from './database';
 
 export const OrderServices = {
   findByID: async (order_id: string) => {

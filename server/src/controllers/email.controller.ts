@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { errorResponse, successResponse } from '../utils/response';
-import * as mailService from '../services/mail.service.ts';
+import * as mailService from '../services/mail.service';
 import jwt from 'jsonwebtoken';
 
 export const sendMail = async (req: Request, res: Response) => {

@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import db from './database.ts';
+import db from './database';
 import { totp } from 'otplib';
 
 totp.options = {
