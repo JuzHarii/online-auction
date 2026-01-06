@@ -440,7 +440,18 @@ function EditProfile({
               </button>
 
               <button
-                onClick={() => setIsDisable(true)}
+                onClick={() => {
+                  {setIsDisable(true)}
+                  reset({
+                    name: profile.name,
+                    email: profile.email,
+                    birthdate: formatDateForInput(profile.birthdate),
+                    homenumber: addressDefaults.homenumber,
+                    street: addressDefaults.street,
+                    ward: addressDefaults.ward,
+                    province: addressDefaults.province,
+                  })
+                }}
                 type="button"
                 className="
                 md:order-1

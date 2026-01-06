@@ -3,6 +3,7 @@ import { ProductHeaderInfo, UserCard } from './product-header';
 import { Product } from '../lib/type';
 import { formatCurrency } from './product';
 import BidderBidHistory from './bid-history';
+import { useUser } from '../UserContext.tsx';
 
 export const BidderSidebar = ({
   product,
@@ -14,6 +15,7 @@ export const BidderSidebar = ({
   product: Product;
   onBidSuccess: () => void;
 }) => {
+  const { user } = useUser();
   const [bidAmount, setBidAmount] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -261,7 +263,7 @@ export const BidderSidebar = ({
         </div>
       </div>
 
-      <BidderBidHistory id={product.id} />
+      { user && <BidderBidHistory id={product.id} bidCount={product.bidsPlaced} />}
     </div>
   );
 };
