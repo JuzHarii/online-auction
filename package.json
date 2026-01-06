@@ -10,7 +10,7 @@
     "build": "npm run build:client && npm run build:server",
     "start": "cd server/dist && node src/server.js",
     "server": "cd server && npm run dev",
-    "client": "vite",
+    "client": "PORT=8000 vite",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "format": "prettier --write \"client/src/**/*.{ts,tsx,json,css,md}\"",
     "format:check": "prettier --check \"client/src/**/*.{ts,tsx,json,css,md}\"",
