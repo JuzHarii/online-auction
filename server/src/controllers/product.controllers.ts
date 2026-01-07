@@ -959,7 +959,7 @@ export const appendProductDescription = async (req: Request, res: Response) => {
 
     // Send email to all bidders notifying them of the description update
     if (bidderEmails.length > 0) {
-      const productLink = `${process.env.CLIENT_URL}/product/${id}`;
+      const productLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/product/${id}`;
       await mailService.sendDescriptionUpdatedEmail(
         bidderEmails,
         product.name,
