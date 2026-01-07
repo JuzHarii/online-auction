@@ -66,7 +66,7 @@ git checkout main   # or your desired branch
 ### 2. Install Dependencies
 
 ```bash
-npm 
+npm install
 ```
 
 ### 3. Copy Environment Template and Configure
